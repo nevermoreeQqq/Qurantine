@@ -1,0 +1,22 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {createGameServer}=require('../server.js');
+test('Two real clients join one room, receive shared state, and move independently',async t=>{
+  const server=createGameServer();await new Promise(r=>server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${server.address().port}`;
+  t.after(()=>{server.closeAllConnections();server.close();});
+  const post=async(url,data={},token)=>{const r=await fetch(base+url,{method:'POST',headers:{'Content-Type':'application/json',...(token?{'x-session':token}:{})},body:JSON.stringify(data)});return{status:r.status,data:await r.json()};};
+  const a=(await post('/api/join',{name:'Alpha'})).data,b=(await post('/api/join',{name:'Bravo',room:a.room})).data;
+  assert.equal(a.snapshot.state,'waiting');assert.equal(b.room,a.room);assert.equal(b.snapshot.players.length,2);assert.notEqual(a.token,b.token);
+  assert.equal((await post('/api/action',{type:'launch'},b.token)).status,403);
+  assert.equal((await post('/api/action',{type:'launch'},a.token)).data.ok,true);
+  assert.equal((await post('/api/action',{type:'buy',item:'rifle'},b.token)).data.ok,false);
+  const abort=new AbortController();t.after(()=>abort.abort());const r=await fetch(`${base}/api/events?token=${b.token}`,{signal:abort.signal});assert.match(r.headers.get('content-type'),/event-stream/);const reader=r.body.getReader(),decoder=new TextDecoder();let buffer='';
+  const waitState=async predicate=>{const deadline=Date.now()+4000;while(Date.now()<deadline){const {value,done}=await reader.read();if(done)throw Error('Stream closed');buffer+=decoder.decode(value,{stream:true});let end;while((end=buffer.indexOf('\n\n'))>=0){const line=buffer.slice(0,end);buffer=buffer.slice(end+2);if(line.startsWith('data: ')){const s=JSON.parse(line.slice(6));if(predicate(s))return s;}}}throw Error('No matching state');};
+  const initial=await waitState(s=>s.state==='playing');assert.equal(initial.players.length,2);const ax=initial.players.find(p=>p.id===a.id).x;
+  await post('/api/input',{dx:1,dy:0,angle:0,shoot:true},a.token);const changed=await waitState(s=>s.players.find(p=>p.id===a.id).x>ax+10);
+  assert.equal(changed.players.find(p=>p.id===b.id).x,1246);assert.ok(changed.players.find(p=>p.id===a.id).clips.pistol<14);assert.equal(changed.wave,1);
+  assert.equal((await post('/api/input',{dx:1},'invalid')).status,401);
+  await post('/api/join',{name:'C',room:a.room});await post('/api/join',{name:'D',room:a.room});assert.equal((await post('/api/join',{room:a.room})).status,409);
+  await post('/api/leave',{},a.token);const left=await waitState(s=>s.players.length===3&&!s.players.some(p=>p.id===a.id));assert.equal(left.host,b.id);
+  await reader.cancel();
+});

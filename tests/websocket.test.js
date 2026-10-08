@@ -1,0 +1,24 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {WebSocket}=require('ws');
+const {createGameServer}=require('../server.js');
+test('Two WebSocket clients share snapshots, ack movement, shoot once, ping and enforce host actions',async t=>{
+  const server=createGameServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const address=`127.0.0.1:${server.address().port}`;
+  const clients=[];t.after(async()=>{for(const c of clients)c.ws.terminate();server.closeAllConnections();await new Promise(r=>server.close(r));});
+  const join=async data=>{const r=await fetch(`http://${address}/api/join`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});return r.json();};
+  const connect=async token=>{const ws=new WebSocket(`ws://${address}/api/socket?token=${token}`,{origin:`http://${address}`}),messages=[];let wake;
+    ws.on('message',data=>{messages.push(JSON.parse(data));wake?.();});await new Promise((resolve,reject)=>{ws.once('open',resolve);ws.once('error',reject);});
+    const client={ws,send:data=>ws.send(JSON.stringify(data)),wait:async predicate=>{const end=Date.now()+3000;while(Date.now()<end){const i=messages.findIndex(predicate);if(i>=0)return messages.splice(i,1)[0];await new Promise(resolve=>{const timer=setTimeout(resolve,100);wake=()=>{clearTimeout(timer);resolve();};});}throw Error('No matching WebSocket message');}};clients.push(client);return client;
+  };
+  const a=await join({name:'Alpha'}),b=await join({name:'Bravo',room:a.room}),host=await connect(a.token),guest=await connect(b.token);
+  guest.send({type:'action',action:'launch'});assert.equal((await guest.wait(m=>m.type==='result')).status,403);
+  host.send({type:'ping',clientTime:123});assert.equal((await host.wait(m=>m.type==='pong')).clientTime,123);
+  host.send({type:'action',action:'launch'});const first=(await host.wait(m=>m.type==='snapshot'&&m.snapshot.state==='playing')).snapshot;
+  const x=first.players.find(p=>p.id===a.id).x;
+  host.send({type:'input',eventAck:first.events.at(-1)?.id||0,frames:Array.from({length:12},(_,i)=>({seq:i+1,dx:1,dy:0,angle:0,shoot:i===0,shotId:i===0?1:undefined}))});
+  const latest=(await guest.wait(m=>m.type==='snapshot'&&m.snapshot.players.find(p=>p.id===a.id)?.ack===12)).snapshot;
+  assert.ok(Math.abs(latest.players.find(p=>p.id===a.id).x-x-45.6)<1e-6);assert.equal(latest.players.find(p=>p.id===b.id).x,1246);assert.equal(latest.players.find(p=>p.id===a.id).clips.pistol,13);assert.equal(latest.round,1);
+  assert.ok(latest.events.some(e=>e.type==='shot'&&e.owner===a.id&&e.shotId===1));
+  host.send({type:'action',action:'restart'});assert.equal((await host.wait(m=>m.type==='result'&&m.error)).status,409);
+  const denied=new WebSocket(`ws://${address}/api/socket?token=${a.token}`,{origin:'http://untrusted.invalid'});const status=await new Promise(resolve=>{denied.on('unexpected-response',(_,r)=>{r.resume();resolve(r.statusCode);});denied.on('error',()=>{});});assert.equal(status,401);denied.terminate();
+});
