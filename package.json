@@ -1,0 +1,92 @@
+{
+  "name": "quarantine-2d",
+  "version": "6.0.0",
+  "private": true,
+  "description": "2D survival shooter against mutants",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "desktop": "electron .",
+    "desktop:smoke": "electron . --smoke-test",
+    "build:win": "electron-builder --win nsis --x64",
+    "pack:update": "node tools/pack-update.cjs",
+    "build:mac": "electron-builder --mac dmg --x64 --arm64 --publish never",
+    "build:mac:intel": "electron-builder --mac dmg --x64 --publish never",
+    "build:mac:silicon": "electron-builder --mac dmg --arm64 --publish never",
+    "verify:mac": "node tools/verify-macos.cjs"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "electron": "43.7.9",
+    "electron-builder": "26.15.3"
+  },
+  "main": "desktop/main.cjs",
+  "author": "Quarantine",
+  "build": {
+    "appId": "com.quarantine.cordon",
+    "productName": "Quarantine",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "index.html",
+      "style.css",
+      "game.js",
+      "core.js",
+      "content.js",
+      "controls.js",
+      "music.js",
+      "render.js",
+      "simulation.js",
+      "terrain.js",
+      "netcode.js",
+      "server.js",
+      "package.json",
+      "node_modules/ws/**/*",
+      "assets/icon.ico",
+      "update-public.pem",
+      "assets/*.qtu",
+      "assets/icon.png",
+      "assets/icon.icns"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "signAndEditExecutable": true,
+      "icon": "assets/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Карантин",
+      "artifactName": "Quarantine-Setup-${version}.exe",
+      "installerLanguages": [
+        "ru_RU",
+        "en_US"
+      ],
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    },
+    "mac": {
+      "category": "public.app-category.action-games",
+      "icon": "assets/icon.icns",
+      "minimumSystemVersion": "12.0",
+      "identity": "-",
+      "hardenedRuntime": false,
+      "artifactName": "Quarantine-${version}-macOS-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Quarantine ${version}",
+      "format": "ULFO"
+    }
+  }
+}

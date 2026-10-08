@@ -1,0 +1,11 @@
+node_modules/
+release/
+diagnostics/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+*signing-key*
+*.p12
+*.pfx
