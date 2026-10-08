@@ -1,0 +1,10 @@
+const path=require('node:path'),fs=require('node:fs');
+const {spawnSync}=require('node:child_process');
+if(process.platform!=='win32')throw Error('Run this verification on Windows');
+const executable=path.resolve(__dirname,'../release/win-unpacked/Quarantine.exe');
+if(!fs.existsSync(executable))throw Error('Build the Windows application first');
+const result=spawnSync(executable,['--smoke-test'],{encoding:'utf8',timeout:45000});
+if(result.stdout)process.stdout.write(result.stdout);
+if(result.stderr)process.stderr.write(result.stderr);
+if(result.status!==0)throw Error('Windows smoke failed: '+(result.error?.message||result.status));
+console.log('Native Windows application passed.');
