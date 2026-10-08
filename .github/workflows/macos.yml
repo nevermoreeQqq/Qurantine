@@ -1,0 +1,45 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15-intel
+            script: build:mac:intel
+          - arch: arm64
+            runner: macos-15
+            script: build:mac:silicon
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build native application
+        run: npm run ${{ matrix.script }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Check signature, architecture and native launch
+        run: npm run verify:mac -- ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: Quarantine-macOS-${{ matrix.arch }}
+          path: release/Quarantine-*-macOS-${{ matrix.arch }}.dmg
+          if-no-files-found: error
+          retention-days: 14
