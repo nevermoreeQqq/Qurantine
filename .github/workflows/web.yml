@@ -1,0 +1,44 @@
+name: Build Yandex Games archive
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build:web
+      - name: Validate archive and script references
+        shell: python
+        run: |
+          import re, zipfile
+          with zipfile.ZipFile('release/Quarantine-6.0.1-YandexGames.zip') as archive:
+              assert archive.testzip() is None
+              names = archive.namelist()
+              assert 'index.html' in names and 'sdk.js' not in names
+              assert sum(entry.file_size for entry in archive.infolist()) <= 100 * 1024 * 1024
+              assert all(name.isascii() and ' ' not in name and '..' not in name for name in names)
+              html = archive.read('index.html').decode()
+              for src in re.findall(r'(?:src|href)="([^"]+)"', html):
+                  if src.endswith(('.js', '.css')):
+                      assert src in names, src
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: Quarantine-YandexGames
+          path: release/Quarantine-6.0.1-YandexGames.zip
+          if-no-files-found: error
+          retention-days: 30

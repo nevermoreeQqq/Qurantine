@@ -14,7 +14,8 @@
     "build:mac": "electron-builder --mac dmg --x64 --arm64 --publish never",
     "build:mac:intel": "electron-builder --mac dmg --x64 --publish never",
     "build:mac:silicon": "electron-builder --mac dmg --arm64 --publish never",
-    "verify:mac": "node tools/verify-macos.cjs"
+    "verify:mac": "node tools/verify-macos.cjs",
+    "build:web": "node tools/build-web.cjs"
   },
   "dependencies": {
     "ws": "^8.22.0"
