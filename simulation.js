@@ -5,11 +5,28 @@
   const D=typeof module!=='undefined'&&module.exports?require('./content.js'):root.GameContent;
   const {WORLD,OBSTACLES,WEAPONS,GOODS,STATS,AMMO,GRENADES,BOSSES,MODES,BUILD_ITEMS,TURRETS,BARRICADE_TIERS}=D;
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-  function movePlayer(p,input,dt,barriers=[]){
+  const solidEnemy=e=>e.hp>0&&!(e.flight>0)&&!(e.jump>0);
+  const CONTACT_GAP=.25;
+  function moveBody(body,dx,dy,valid,blockers=[]){
+    // Sweep each axis against expanded circles, so a fast charge cannot cross a player.
+    for(const [mx,my]of[[dx,0],[0,dy]]){
+      if(!mx&&!my)continue;let limit=1;
+      for(const other of blockers){
+        if(other.hp<=0)continue;
+        const fx=body.x-other.x,fy=body.y-other.y,r=body.r+other.r+CONTACT_GAP;
+        if(fx*fx+fy*fy<=r*r+1e-6){if(fx*mx+fy*my<0)limit=0;continue;}
+        const t=segmentCircle(body.x,body.y,body.x+mx,body.y+my,other.x,other.y,r);
+        if(t!==null)limit=Math.min(limit,t);
+      }
+      const x=body.x+mx*limit,y=body.y+my*limit;
+      if(valid(x,y)){body.x=x;body.y=y;}
+    }
+  }
+  function movePlayer(p,input,dt,barriers=[],enemies=[]){
     const valid=(x,y)=>x>p.r+20&&y>p.r+20&&x<WORLD.w-p.r-20&&y<WORLD.h-p.r-20&&!OBSTACLES.some(o=>circleRect(x,y,p.r,o))&&!barriers.some(b=>b.type!=='door'&&circleRect(x,y,p.r,b));
     const n=Math.hypot(input.dx,input.dy),speed=(input.sprint?268:190)*WEAPONS[p.weapon].speed*(p.slow>0?.48:1);
     if(!n||p.hp<=0||p.controlLock>0)return;const dx=input.dx/n*speed*dt,dy=input.dy/n*speed*dt;p.step=(p.step||0)+dt*speed*.055;
-    if(valid(p.x+dx,p.y))p.x+=dx;if(valid(p.x,p.y+dy))p.y+=dy;
+    moveBody(p,dx,dy,valid,enemies.filter(solidEnemy));
   }
   function shotSpread(id,pellet,spread){let n=((id||0)*73856093^(pellet+1)*19349663)>>>0;n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return(((n^(n>>>16))>>>0)/4294967296*2-1)*spread;}
   class Simulation{
@@ -19,7 +36,7 @@
     message(p,text){this.event('message',{player:p.id,text});}
     staticValid(x,y,r=20){return x>r+20&&y>r+20&&x<WORLD.w-r-20&&y<WORLD.h-r-20&&!OBSTACLES.some(o=>circleRect(x,y,r,o));}
     valid(x,y,r,kind='player'){return this.staticValid(x,y,r)&&(kind!=='enemy'||!this.graves.some(g=>circleRect(x,y,r,{x:g.x-20,y:g.y-34,w:40,h:68})))&&!this.barriers.some(b=>(kind==='enemy'||b.type!=='door')&&circleRect(x,y,r,b));}
-    move(body,dx,dy,kind='player'){if(this.valid(body.x+dx,body.y,body.r,kind))body.x+=dx;if(this.valid(body.x,body.y+dy,body.r,kind))body.y+=dy;}
+    move(body,dx,dy,kind='prop'){const blockers=kind==='enemy'?this.players:kind==='player'?this.enemies.filter(solidEnemy):[];moveBody(body,dx,dy,(x,y)=>this.valid(x,y,body.r,kind),blockers);}
     sight(a,b,padding=0){return !OBSTACLES.some(o=>segmentRect(a.x,a.y,b.x,b.y,{x:o.x-padding,y:o.y-padding,w:o.w+padding*2,h:o.h+padding*2})!==null);}
     spot(x,y,min,max,r=18){for(let i=0;i<180;i++){const a=this.rand(0,6.28),d=this.rand(min,max),p={x:clamp(x+Math.cos(a)*d,50,WORLD.w-50),y:clamp(y+Math.sin(a)*d,50,WORLD.h-50)};if(this.valid(p.x,p.y,r)&&this.players.every(q=>dist(p,q)>55))return p;}return{x:1200,y:850};}
     pickup(type,x,y,amount=1){const money=type==='gold'||type==='bill';this.pickups.push({id:this.id(),type,x,y,amount,phase:this.rand(0,6.28),...(money?{life:type==='bill'?150:90}:{})});const supplies=this.pickups.filter(p=>!['gold','bill'].includes(p.type));if(supplies.length>40)this.pickups.splice(this.pickups.indexOf(supplies[0]),1);if(this.pickups.length>180)this.pickups.shift();}
@@ -94,7 +111,7 @@
     input(id,input){const p=this.players.find(p=>p.id===id);if(!p)return;p.input={dx:Number.isFinite(input.dx)?clamp(input.dx,-1,1):0,dy:Number.isFinite(input.dy)?clamp(input.dy,-1,1):0,angle:Number.isFinite(input.angle)?input.angle:0,shoot:input.shoot===true,repair:input.repair===true,sprint:input.sprint===true};}
     networkPlayer(id){const p=this.players.find(p=>p.id===id);if(p){p.commands=[];p.ack=0;p.queued=0;p.budget=0;}}
     queueInput(id,frames){const p=this.players.find(p=>p.id===id);if(!p?.commands||!Array.isArray(frames))return;for(const f of frames.slice(0,30)){if(!f||typeof f!=="object"||!Number.isSafeInteger(f.seq)||f.seq<=p.queued||f.seq>p.queued+120||p.commands.length>=120)continue;this.input(id,f);p.commands.push({...p.input,seq:f.seq,shotId:Number.isSafeInteger(f.shotId)?f.shotId:undefined});p.queued=f.seq;}if(p.commands.length>60){const skipped=p.commands.splice(0,p.commands.length-12);p.ack=skipped.at(-1).seq;}}
-    stepPlayer(p,dt){const w=WEAPONS[p.weapon];p.angle=p.input.angle;p.fireTimer=Math.max(0,p.fireTimer-dt);p.grenadeTimer=Math.max(0,p.grenadeTimer-dt);p.shurikenTimer=Math.max(0,p.shurikenTimer-dt);p.hurt=Math.max(0,p.hurt-dt);p.recoil=Math.max(0,p.recoil-dt*12);p.swing=Math.max(0,p.swing-dt);p.flashTime=Math.max(0,(p.flashTime||0)-dt);p.controlLock=Math.max(0,p.controlLock-dt);if(p.controlLock>0)return;if(p.reload>0){p.reload-=dt;if(p.reload<=0){const take=p.weapon==='pistol'?w.mag-p.clips[p.weapon]:Math.min(w.mag-p.clips[p.weapon],p.reserve);p.clips[p.weapon]+=take;if(p.weapon!=='pistol')p.reserve-=take;}}movePlayer(p,p.input,dt,this.barriers);if(p.input.repair)this.tool(p,'repair');if(p.input.shoot)this.shoot(p,p.input.shotId);}
+    stepPlayer(p,dt){const w=WEAPONS[p.weapon];p.angle=p.input.angle;p.fireTimer=Math.max(0,p.fireTimer-dt);p.grenadeTimer=Math.max(0,p.grenadeTimer-dt);p.shurikenTimer=Math.max(0,p.shurikenTimer-dt);p.hurt=Math.max(0,p.hurt-dt);p.recoil=Math.max(0,p.recoil-dt*12);p.swing=Math.max(0,p.swing-dt);p.flashTime=Math.max(0,(p.flashTime||0)-dt);p.controlLock=Math.max(0,p.controlLock-dt);if(p.controlLock>0)return;if(p.reload>0){p.reload-=dt;if(p.reload<=0){const take=p.weapon==='pistol'?w.mag-p.clips[p.weapon]:Math.min(w.mag-p.clips[p.weapon],p.reserve);p.clips[p.weapon]+=take;if(p.weapon!=='pistol')p.reserve-=take;}}movePlayer(p,p.input,dt,this.barriers,this.enemies);if(p.input.repair)this.tool(p,'repair');if(p.input.shoot)this.shoot(p,p.input.shotId);}
     action(id,type,item,angle){const p=this.players.find(p=>p.id===id);if(!p||this.state!=='playing')return false;if(Number.isFinite(angle)){p.angle=clamp(angle,-Math.PI,Math.PI);p.input.angle=p.angle;}
       if(['timeout','resumeTimeout','voteYes','voteNo'].includes(type))return this.timeoutVote(p,type);if(p.hp<=0)return false;if(p.controlLock>0&&!['buy','equip','nextWeapon','flashlight','nvg'].includes(type))return false;
       if(this.timeoutRemaining>0&&!['buy','equip','nextWeapon','buildSelect','nadeSelect','flashlight','nvg','turretUpgrade','turretArmor'].includes(type))return false;
@@ -152,7 +169,7 @@
       if(type==='boss'){const profile=options.profile||this.chooseBoss(options.exclude);Object.assign(e,profile,{summoned:!!options.summoned,special:3});}
       this.enemies.push(e);return e;
     }
-    projectile(p,angle,damage,speed,range,type='bullet',pierce=1,shotId,pellet){this.bullets.push({id:this.id(),x:p.x+Math.cos(angle)*31,y:p.y+Math.sin(angle)*31,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:range/speed,damage,owner:p.id,type,pierce,hit:[],shotId,pellet,weapon:p.weapon});}
+    projectile(p,angle,damage,speed,range,type='bullet',pierce=1,shotId,pellet){this.bullets.push({id:this.id(),x:p.x+Math.cos(angle)*31,y:p.y+Math.sin(angle)*31,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:range/speed,damage,owner:p.id,type,pierce,hit:[],shotId,pellet,weapon:p.weapon,...(!['acid','lava'].includes(type)?{originX:p.x,originY:p.y}:{})});}
     shoot(p,shotId){const w=WEAPONS[p.weapon];if(p.fireTimer>0||p.reload>0)return;if(p.weapon==='hammer'){if(p.buildItem){if(!p.buildPreview){p.buildPreview=this.placementBox(p,p.buildItem);p.fireTimer=.18;this.message(p,'Проект готов: второй клик поставить, ПКМ отменить');}else this.place(p,p.buildItem);return;}if(this.nearestBarrier(p)){this.tool(p,'upgrade');return;}if(p.hammerDurability<=0)return;p.swing=.35;p.fireTimer=w.interval;this.event('hammer',{x:p.x,y:p.y,angle:p.angle,owner:p.id});for(const e of this.enemies)if(e.hp>0&&dist(p,e)<w.range+e.r&&this.sight(p,e)&&Math.abs(Math.atan2(Math.sin(Math.atan2(e.y-p.y,e.x-p.x)-p.angle),Math.cos(Math.atan2(e.y-p.y,e.x-p.x)-p.angle)))<.9)this.hurtEnemy(e,w.damage,p.id,p.angle,'hammer');this.wearHammer(p);return;}if(p.weapon==='flame'){if(p.fuel<=0){p.fireTimer=.5;this.message(p,'Нет топлива · ищи оранжевые канистры');return;}p.fuel--;p.fireTimer=w.interval;p.recoil=1;this.event('flame',{x:p.x,y:p.y,angle:p.angle,owner:p.id,shotId});for(const e of this.enemies){const a=Math.atan2(e.y-p.y,e.x-p.x),diff=Math.atan2(Math.sin(a-p.angle),Math.cos(a-p.angle));if(e.hp>0&&dist(p,e)<w.range&&Math.abs(diff)<w.spread&&this.sight(p,e)){this.hurtEnemy(e,w.damage,p.id,p.angle);e.burn=2;e.burnOwner=p.id;}}for(const prop of [...this.totems,...this.cocoons,...this.mines])if(dist(p,prop)<w.range&&Math.abs(Math.atan2(Math.sin(Math.atan2(prop.y-p.y,prop.x-p.x)-p.angle),Math.cos(Math.atan2(prop.y-p.y,prop.x-p.x)-p.angle)))<w.spread&&this.sight(p,prop))this.hurtProp(prop,w.damage,p.id);return;}if(p.clips[p.weapon]<=0){if(!this.reload(p)){p.fireTimer=.5;this.message(p,'Магазин пуст · нужны патроны');}return;}p.clips[p.weapon]--;p.fireTimer=w.interval;p.recoil=1;for(let i=0;i<w.pellets;i++)this.projectile(p,p.angle+(shotId===undefined?this.rand(-w.spread,w.spread):shotSpread(shotId,i,w.spread))*(p.input.sprint?1.5:1),w.damage,1250,w.range,'bullet',1,shotId,i);this.event('shot',{x:p.x,y:p.y,angle:p.angle,weapon:p.weapon,owner:p.id,shotId});if(p.clips[p.weapon]===0)this.reload(p);}
     throwGrenade(p){if(p.grenadeTimer>0)return false;const type=p.nadeType;if(p.nades[type]<=0){this.message(p,'Нет выбранных гранат · Q сменить тип');return false;}p.nades[type]--;p.grenadeTimer=.45;this.grenades.push({id:this.id(),type,owner:p.id,x:p.x+Math.cos(p.angle)*25,y:p.y+Math.sin(p.angle)*25,vx:Math.cos(p.angle)*1180,vy:Math.sin(p.angle)*1180,r:6,age:0,life:type==='molotov'?.75:1.25});return true;}
     hurtEnemy(e,damage,owner,angle=0,weapon){
@@ -177,7 +194,7 @@
       if(e.burn>0&&e.burnTick<=0){this.hurtEnemy(e,5,e.burnOwner,0,'flame');e.burnTick=.25;}if(e.hp<=0||e.frozen>0)return;
       e.attack-=dt;e.special-=dt;e.step+=dt*e.speed*.06;
       let target=alive.reduce((a,b)=>dist(e,a)<dist(e,b)?a:b);const lure=this.barriers.filter(b=>TURRETS[b.type]&&b.hp>0&&dist(e,{x:b.x+b.w/2,y:b.y+b.h/2})<620).sort((a,b)=>dist(e,{x:a.x+a.w/2,y:a.y+a.h/2})-dist(e,{x:b.x+b.w/2,y:b.y+b.h/2}))[0];if(lure&&e.type!=='boss')target={x:lure.x+lure.w/2,y:lure.y+lure.h/2,r:26,structure:lure};const d=dist(e,target);e.angle=Math.atan2(target.y-e.y,target.x-e.x);
-      if(e.flight>0){e.flight=Math.max(0,e.flight-dt);const progress=1-e.flight/e.flightDuration;e.x=e.flightFrom.x+(e.flightTo.x-e.flightFrom.x)*progress;e.y=e.flightFrom.y+(e.flightTo.y-e.flightFrom.y)*progress;if(e.flight===0){this.areaSlam(e,alive,70,14);e.attack=.8;}return;}
+      if(e.flight>0){e.flight=Math.max(0,e.flight-dt);const progress=1-e.flight/e.flightDuration;e.x=e.flightFrom.x+(e.flightTo.x-e.flightFrom.x)*progress;e.y=e.flightFrom.y+(e.flightTo.y-e.flightFrom.y)*progress;if(e.flight===0){this.areaSlam(e,alive,70,14);e.attack=.8;this.separatePlayersEnemies();}return;}
       if(e.type==='totemist'&&(e.totemsPlaced||0)<4){this.tickTotemist(e,dt);return;}if(e.type==='lavatrail'){e.lavaTimer=(e.lavaTimer||0)-dt;if(e.lavaTimer<=0){e.lavaTimer=1.3;this.fires.push({id:this.id(),x:e.x,y:e.y,r:55,life:7,tick:0,type:'lava',owner:null});}}
       if(e.type==='nightnecro'&&this.night&&e.special<=0){e.special=9;for(let i=0;i<3;i++)if(this.enemies.length<125)this.spawn('nightstalker');this.event('necromancy',{x:e.x,y:e.y});}
       if(e.type==='boss')this.bossAbility(e,target,dt);
@@ -193,7 +210,7 @@
         a=Math.atan2(vy,vx);
       }
       if(e.dash>0){e.dash-=dt;a=e.dashAngle;speed=e.type==='boss'?385:330;stops=false;}
-      if(e.jump>0){e.jump=Math.max(0,e.jump-dt);const progress=1-e.jump/.8;e.x=e.jumpFrom.x+(e.jumpTo.x-e.jumpFrom.x)*progress;e.y=e.jumpFrom.y+(e.jumpTo.y-e.jumpFrom.y)*progress;if(e.jump===0){this.areaSlam(e,alive,145,32);e.attack=.8;}}
+      if(e.jump>0){e.jump=Math.max(0,e.jump-dt);const progress=1-e.jump/.8;e.x=e.jumpFrom.x+(e.jumpTo.x-e.jumpFrom.x)*progress;e.y=e.jumpFrom.y+(e.jumpTo.y-e.jumpFrom.y)*progress;if(e.jump===0){this.areaSlam(e,alive,145,32);e.attack=.8;this.separatePlayersEnemies();}}
       else if(!stops&&e.windup<=0)this.move(e,(Math.cos(a)*speed+e.knockX)*dt,(Math.sin(a)*speed+e.knockY)*dt,'enemy');
       e.knockX*=Math.exp(-dt*10);e.knockY*=Math.exp(-dt*10);
       const barrier=this.barriers.find(b=>circleRect(e.x,e.y,e.r+12,b));
@@ -203,7 +220,7 @@
     }
     areaSlam(e,alive,r,damage){this.event('slam',{x:e.x,y:e.y,r});for(const p of alive)if(dist(e,p)<r&&this.sight(e,p))this.hurtPlayer(p,damage*(.5+.5*(1-dist(e,p)/r)));for(const b of this.barriers)if(circleRect(e.x,e.y,r,b))b.hp-=160;}
     bossAbility(e,target,dt){
-      if(e.hookTime>0){e.hookTime=Math.max(0,e.hookTime-dt);const p=this.players.find(p=>p.id===e.hookTarget);if(p?.hp>0&&dist(e,p)>75&&this.sight(e,p)){const a=Math.atan2(e.y-p.y,e.x-p.x);p.controlLock=.12;this.move(p,Math.cos(a)*540*dt,Math.sin(a)*540*dt);}}
+      if(e.hookTime>0){e.hookTime=Math.max(0,e.hookTime-dt);const p=this.players.find(p=>p.id===e.hookTarget);if(p?.hp>0&&dist(e,p)>75&&this.sight(e,p)){const a=Math.atan2(e.y-p.y,e.x-p.x);p.controlLock=.12;this.move(p,Math.cos(a)*540*dt,Math.sin(a)*540*dt,'player');}}
       if(e.ability==='hook'){e.slamTimer=(e.slamTimer??8)-dt;if(e.slamTimer<=0){e.slamWindup=1.1;e.slamTimer=13;this.event('slamWarning',{x:e.x,y:e.y,r:600});}if(e.slamWindup>0){e.slamWindup=Math.max(0,e.slamWindup-dt);if(e.slamWindup===0){this.shockwaves.push({id:this.id(),x:e.x,y:e.y,r:0,maxR:600,speed:360,damage:30,hit:[]});this.event('groundStrike',{x:e.x,y:e.y,r:600});}}}
       if(this.newBossAbility(e,target,dt))return;
       if(e.windup>0){e.windup=Math.max(0,e.windup-dt);if(e.windup>.3&&['leap','charge'].includes(e.ability)){const aim=this.predictTarget(target,e.windup+(e.ability==='leap'?.75:.35),e.r);e.aimX=aim.x;e.aimY=aim.y;e.aimAngle=Math.atan2(aim.y-e.y,aim.x-e.x);}if(e.windup<=0){
@@ -216,6 +233,28 @@
       }return;}
       if(e.special<=0&&dist(e,target)<(e.ability==='hook'?850:750)){e.windup=e.ability==='leap'?1:.75;e.aimTarget=target.id;const aim=this.predictTarget(target,e.ability==='leap'?1.1:.65,e.r);e.aimAngle=Math.atan2(aim.y-e.y,aim.x-e.x);e.aimX=aim.x;e.aimY=aim.y;this.event('warning',{x:e.x,y:e.y,tx:target.x,ty:target.y,ability:e.ability});}
     }
+    separatePlayersEnemies(){
+      const players=this.players.filter(p=>p.hp>0);
+      for(const e of this.enemies){
+        if(!solidEnemy(e))continue;
+        for(const p of players){
+          const radius=p.r+e.r+CONTACT_GAP,d=dist(e,p);if(d>=radius-1e-6)continue;
+          const angle=d>.001?Math.atan2(e.y-p.y,e.x-p.x):e.id*2.399963;
+          // Prefer the nearest edge. At a wall or between co-op players, find a free side.
+          let best=null,bestDistance=Infinity;
+          for(let ring=0;ring<4;ring++)for(let i=0;i<16;i++){
+            const a=angle+i*Math.PI/8,range=radius*(1+ring*.5),pos={x:p.x+Math.cos(a)*range,y:p.y+Math.sin(a)*range};
+            if(!this.valid(pos.x,pos.y,e.r,'enemy')||players.some(q=>dist(pos,q)<q.r+e.r+CONTACT_GAP-1e-6))continue;
+            const travel=dist(e,pos);if(travel>=bestDistance)continue;
+            // Check the escape path as well as its endpoint, including built walls and graves.
+            const steps=Math.ceil(travel/4);let clear=true;
+            for(let k=1;k<steps;k++)if(!this.valid(e.x+(pos.x-e.x)*k/steps,e.y+(pos.y-e.y)*k/steps,e.r,'enemy')){clear=false;break;}
+            if(clear){best=pos;bestDistance=travel;}
+          }
+          if(best){e.x=best.x;e.y=best.y;}
+        }
+      }
+    }
     separateEnemies(dt){const cells=new Map(),size=128;
       for(const e of this.enemies){if(e.hp<=0||e.flight>0||e.jump>0)continue;const key=Math.floor(e.x/size)+','+Math.floor(e.y/size);if(!cells.has(key))cells.set(key,[]);cells.get(key).push(e);}
       for(const a of this.enemies){if(a.hp<=0||a.flight>0||a.jump>0)continue;const x=Math.floor(a.x/size),y=Math.floor(a.y/size);for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)for(const b of cells.get((x+dx)+','+(y+dy))||[]){if(b.id<=a.id)continue;const d=dist(a,b),min=a.r+b.r-3;if(d>=min||d<.01)continue;const push=Math.min(45,(min-d)*3)*dt,nx=(a.x-b.x)/d,ny=(a.y-b.y)/d;this.move(a,nx*push,ny*push,'enemy');this.move(b,-nx*push,-ny*push,'enemy');}}
@@ -223,7 +262,7 @@
     tick(dt){if(this.state!=='playing')return;dt=clamp(dt,0,.05);
       if(this.vote){this.vote.life-=dt;if(this.vote.life<=0){this.event('voteEnd',{passed:false});this.vote=null;}}
       if(this.timeoutRemaining>0){this.timeoutRemaining=Math.max(0,this.timeoutRemaining-dt);for(const p of this.players){if(p.commands?.length){p.ack=p.commands.at(-1).seq;p.commands=[];}p.budget=0;}if(this.timeoutRemaining===0)this.event('timeoutEnd');return;}
-      this.elapsed+=dt;this.tickNight(dt);this.tickTotems(dt);for(const p of this.players){if(p.hp>0&&p.nvgOn){p.nvgTime=Math.max(0,p.nvgTime-dt);if(!p.nvgTime)p.nvgOn=false;}if(p.burn>0){p.burn=Math.max(0,p.burn-dt);p.burnTick=(p.burnTick||0)-dt;if(p.burnTick<=0){p.burnTick=.5;this.hurtPlayer(p,3);}}}this.tickTurrets(dt);this.tickShockwaves(dt);this.tickHazards(dt);const alive=this.players.filter(p=>p.hp>0);if(!alive.length){this.state='over';this.event('over');return;}this.flowTimer-=dt;if(this.flowTimer<=0){this.buildFlow(alive[0]);this.flowTimer=.4;}
+      this.elapsed+=dt;this.tickNight(dt);this.tickTotems(dt);for(const p of this.players){if(p.hp>0&&p.nvgOn){p.nvgTime=Math.max(0,p.nvgTime-dt);if(!p.nvgTime)p.nvgOn=false;}if(p.burn>0){p.burn=Math.max(0,p.burn-dt);p.burnTick=(p.burnTick||0)-dt;if(p.burnTick<=0){p.burnTick=.5;this.hurtPlayer(p,3);}}}this.tickTurrets(dt);this.tickShockwaves(dt);this.tickHazards(dt);const alive=this.players.filter(p=>p.hp>0);this.separatePlayersEnemies();if(!alive.length){this.state='over';this.event('over');return;}this.flowTimer-=dt;if(this.flowTimer<=0){this.buildFlow(alive[0]);this.flowTimer=.4;}
       for(const p of this.players){
         const oldX=p.x,oldY=p.y;if(p.commands){p.budget=Math.min(.25,p.budget+dt);while(p.commands.length&&p.budget>=1/60-1e-9){const f=p.commands.shift();p.input=f;if(p.hp>0)this.stepPlayer(p,1/60);p.ack=f.seq;p.budget-=1/60;}if(p.hp<=0)continue;}
         else{if(p.hp<=0)continue;this.stepPlayer(p,dt);}
@@ -231,7 +270,7 @@
       }
       for(const e of this.enemies.slice())this.tickEnemy(e,alive,dt);
       this.separateEnemies(dt);
-      for(let i=this.bullets.length-1;i>=0;i--){const b=this.bullets[i],nx=b.x+b.vx*dt,ny=b.y+b.vy*dt;let wallT=1.01,wall=null;for(const o of OBSTACLES){const t=segmentRect(b.x,b.y,nx,ny,o);if(t!==null&&t<wallT){wallT=t;wall=o;}}if(['acid','lava'].includes(b.type))for(const o of this.barriers){const t=segmentRect(b.x,b.y,nx,ny,o);if(t!==null&&t<wallT){wallT=t;this.hurtBarrier(o,b.type==='lava'?TURRETS[o.type]?180:65:8);if(b.type==='lava')this.fires.push({id:this.id(),x:nx,y:ny,r:62,life:5,tick:0,type:'lava',owner:null});}}const targets=['acid','lava'].includes(b.type)?alive:[...this.enemies,...this.totems,...this.cocoons,...this.mines.filter(m=>m.revealedTo.includes(b.owner))],hits=[];for(const e of targets){if(e.hp<=0||b.hit.includes(e.id))continue;const t=segmentCircle(b.x,b.y,nx,ny,e.x,e.y,e.r);if(t!==null&&t<wallT)hits.push({e,t});}hits.sort((a,c)=>a.t-c.t);for(const {e}of hits){b.hit.push(e.id);if(['acid','lava'].includes(b.type)){this.hurtPlayer(e,b.damage);if(b.type==='lava')e.burn=2;}else if(e.kind)this.hurtProp(e,b.damage,b.owner);else this.hurtEnemy(e,b.damage,b.owner,Math.atan2(b.vy,b.vx),b.weapon);b.pierce--;if(b.pierce<=0)break;}b.life-=dt;
+      for(let i=this.bullets.length-1;i>=0;i--){const b=this.bullets[i],nx=b.x+b.vx*dt,ny=b.y+b.vy*dt;if(b.originX!==undefined){b.x=b.originX;b.y=b.originY;delete b.originX;delete b.originY;}let wallT=1.01,wall=null;for(const o of OBSTACLES){const t=segmentRect(b.x,b.y,nx,ny,o);if(t!==null&&t<wallT){wallT=t;wall=o;}}if(['acid','lava'].includes(b.type))for(const o of this.barriers){const t=segmentRect(b.x,b.y,nx,ny,o);if(t!==null&&t<wallT){wallT=t;this.hurtBarrier(o,b.type==='lava'?TURRETS[o.type]?180:65:8);if(b.type==='lava')this.fires.push({id:this.id(),x:nx,y:ny,r:62,life:5,tick:0,type:'lava',owner:null});}}const targets=['acid','lava'].includes(b.type)?alive:[...this.enemies,...this.totems,...this.cocoons,...this.mines.filter(m=>m.revealedTo.includes(b.owner))],hits=[];for(const e of targets){if(e.hp<=0||b.hit.includes(e.id))continue;const t=segmentCircle(b.x,b.y,nx,ny,e.x,e.y,e.r);if(t!==null&&t<wallT)hits.push({e,t});}hits.sort((a,c)=>a.t-c.t);for(const {e}of hits){b.hit.push(e.id);if(['acid','lava'].includes(b.type)){this.hurtPlayer(e,b.damage);if(b.type==='lava')e.burn=2;}else if(e.kind)this.hurtProp(e,b.damage,b.owner);else this.hurtEnemy(e,b.damage,b.owner,Math.atan2(b.vy,b.vx),b.weapon);b.pierce--;if(b.pierce<=0)break;}b.life-=dt;
         if(b.type==='shuriken'&&b.bounces>0&&b.pierce>0&&(wallT<=1||nx<0||ny<0||nx>WORLD.w||ny>WORLD.h)){
           const hitX=b.x+(nx-b.x)*Math.min(1,wallT),hitY=b.y+(ny-b.y)*Math.min(1,wallT);
           const reflectX=wall?Math.min(Math.abs(hitX-wall.x),Math.abs(hitX-wall.x-wall.w))<Math.min(Math.abs(hitY-wall.y),Math.abs(hitY-wall.y-wall.h)):nx<0||nx>WORLD.w;
@@ -240,7 +279,7 @@
         b.x=nx;b.y=ny;if(wallT<=1||b.pierce<=0||b.life<=0||nx<0||ny<0||nx>WORLD.w||ny>WORLD.h)this.bullets.splice(i,1);}
       for(let i=this.grenades.length-1;i>=0;i--){const g=this.grenades[i];g.life-=dt;g.age+=dt;const x=g.x,y=g.y;this.move(g,g.vx*dt,0);if(g.x===x)g.vx*=-.4;this.move(g,0,g.vy*dt);if(g.y===y)g.vy*=-.4;g.vx*=Math.exp(-dt*3.6);g.vy*=Math.exp(-dt*3.6);if(g.life<=0){this.explode(g);this.grenades.splice(i,1);}}
       for(const f of this.fires){f.life-=dt;f.tick-=dt;if(f.tick<=0){f.tick=.25;for(const e of this.enemies)if(!['poison','lava'].includes(f.type)&&e.hp>0&&dist(f,e)<f.r+e.r&&this.sight(f,e)){this.hurtEnemy(e,f.type==='molotov'&&e.type!=='boss'&&e.type!=='robot'?30:18,f.owner,0,'molotov');e.burn=1.5;e.burnOwner=f.owner;}for(const prop of [...this.totems,...this.cocoons,...this.mines])if(dist(f,prop)<f.r&&this.sight(f,prop))this.hurtProp(prop,12,f.owner);for(const p of alive)if(dist(f,p)<f.r&&this.sight(f,p))this.hurtPlayer(p,f.type==='lava'?7:4);if(f.type==='lava')for(const b of this.barriers)if(circleRect(f.x,f.y,f.r,b))this.hurtBarrier(b,TURRETS[b.type]?30:12);}}
-      this.fires=this.fires.filter(f=>f.life>0);this.barriers=this.barriers.filter(b=>b.hp>0);this.enemies=this.enemies.filter(e=>e.hp>0);if(!this.players.some(p=>p.hp>0)){this.state='over';this.event('over');return;}
+      this.fires=this.fires.filter(f=>f.life>0);this.barriers=this.barriers.filter(b=>b.hp>0);this.enemies=this.enemies.filter(e=>e.hp>0);this.separatePlayersEnemies();if(!this.players.some(p=>p.hp>0)){this.state='over';this.event('over');return;}
       if(this.pending>0){this.spawnTimer-=dt;if(this.spawnTimer<=0){this.spawn();this.spawnTimer=Math.max(.38,1.15-this.wave*.03);}}else if(!this.enemies.length){if(!this.intermission){this.intermission=5;this.event('clear',{wave:this.wave});}this.intermission-=dt;if(this.intermission<=0)this.nextWave();}
     }
 
@@ -259,4 +298,3 @@
   }
   const api={TURRETS,BARRICADE_TIERS,Simulation,WORLD,OBSTACLES,WEAPONS,GOODS,STATS,AMMO,GRENADES,BOSSES,MODES,BUILD_ITEMS,movePlayer,shotSpread};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameSimulation=api;
 })(typeof window!=='undefined'?window:globalThis);
-

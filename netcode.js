@@ -5,19 +5,19 @@
   class Predictor{
     constructor(){this.reset();}
     reset(){this.player=null;this.pending=[];this.seq=0;this.error={x:0,y:0};}
-    reconcile(player,barriers){
+    reconcile(player,barriers,enemies=[]){
       if(!player)return;const old=this.player,wasAlive=old?.hp>0;
       this.pending=this.pending.filter(f=>f.seq>(player.ack||0));
       this.player={...player};
-      if(player.hp>0)for(const f of this.pending)S.movePlayer(this.player,f,STEP,barriers);
+      if(player.hp>0)for(const f of this.pending)S.movePlayer(this.player,f,STEP,barriers,enemies);
       // Aim is owned by the local mouse. An older snapshot must never rewind it.
       if(player.hp>0)this.player.angle=this.pending.at(-1)?.angle??old?.angle??player.angle;
       if(old&&wasAlive&&player.hp>0){const dx=old.x-this.player.x,dy=old.y-this.player.y;if(Math.hypot(dx,dy)<80){this.error.x+=dx;this.error.y+=dy;}else this.error={x:0,y:0};}else this.error={x:0,y:0};
     }
-    step(input,barriers){
+    step(input,barriers,enemies=[]){
       if(!this.player||this.pending.length>=120)return null;
       const f={...input,seq:++this.seq};this.pending.push(f);
-      S.movePlayer(this.player,f,STEP,barriers);this.player.angle=f.angle;return f;
+      S.movePlayer(this.player,f,STEP,barriers,enemies);this.player.angle=f.angle;return f;
     }
     visual(dt){if(!this.player)return null;const decay=Math.exp(-dt*18);this.error.x*=decay;this.error.y*=decay;return{...this.player,x:this.player.x+this.error.x,y:this.player.y+this.error.y};}
   }

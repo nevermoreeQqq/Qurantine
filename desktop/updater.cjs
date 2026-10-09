@@ -19,6 +19,9 @@ function createUpdater({baseRoot,dataRoot,downloads,extraDirs=[],publicKey}){
   let config={source:'',active:null};try{config={...config,...JSON.parse(fs.readFileSync(configFile))};}catch{}
   const save=()=>fs.writeFileSync(configFile,JSON.stringify(config));
   const baseVersion=JSON.parse(fs.readFileSync(path.join(baseRoot,'package.json'))).version;
+  // A newly installed application takes precedence over a previous launcher's rollback.
+  if(config.baseVersion!==baseVersion&&config.active&&compare(config.active,baseVersion)<0)config.active=null;
+  config.baseVersion=baseVersion;save();
   let current=baseVersion,installed=current;
   const bundles=new Map();
   function scan(){for(const dir of [path.join(baseRoot,'assets'),archives,downloads,...extraDirs]){if(!dir)continue;let names;try{names=fs.readdirSync(dir);}catch{continue;}for(const name of names){if(!/^((Quarantine-Update-\d+\.\d+\.\d+)|update(-\d+\.\d+\.\d+)?)\.qtu$/.test(name))continue;try{const file=path.join(dir,name),bundle=readBundle(fs.readFileSync(file),publicKey);bundles.set(bundle.version,{...bundle,file});}catch{}}}}
@@ -36,11 +39,13 @@ function createUpdater({baseRoot,dataRoot,downloads,extraDirs=[],publicKey}){
   let remote=[];
   async function refresh(source){if(source!==undefined)setSource(source);scan();remote=[];let error='';if(config.source){try{const response=await fetch(config.source+'/updates/catalog.json',{signal:AbortSignal.timeout(4000)});if(!response.ok)throw Error('Сервер обновлений не отвечает');const raw=await response.json();remote=(Array.isArray(raw.versions)?raw.versions:[]).filter(v=>/^\d+\.\d+\.\d+$/.test(v.version)&&Number.isSafeInteger(v.protocol)).map(v=>({version:v.version,protocol:v.protocol,notes:String(v.notes||'').slice(0,500),remote:true}));}catch(e){error='Источник обновлений недоступен. Доступны сохранённые версии.';}}
     const list=new Map([...bundles].map(([version,b])=>[version,{version,protocol:b.protocol,local:true,notes:b.version.startsWith('6.')?'Ночь, адские мутанты, новая оборона и круговые меню.':b.version.startsWith('5.')?'Режимы сложности, турели, круговое строительство и новый арсенал.':'Предыдущая версия игры.'}]));for(const v of remote)list.set(v.version,{...list.get(v.version),...v});
+    list.set(baseVersion,{version:baseVersion,protocol:Number(baseVersion.split('.')[0]),local:true,notes:'Встроенная версия приложения'});
     if(!list.has(current))list.set(current,{version:current,protocol:Number(current.split('.')[0]),local:true,notes:'Установленная версия'});
     const versions=[...list.values()].sort((a,b)=>compare(b.version,a.version));return{current,installed,latest:versions[0]?.version||current,available:compare(versions[0]?.version||current,current)>0,versions,source:config.source,error};
   }
   async function install(version,onProgress=()=>{},allowDowngrade=false){
     if(!/^\d+\.\d+\.\d+$/.test(String(version)))throw Error('Неверная версия');if(!allowDowngrade&&compare(version,current)<=0)throw Error('Последняя версия уже установлена');
+    if(version===baseVersion){config.active=null;save();installed=version;onProgress(100);return{version,restart:true};}
     scan();let bundle=bundles.get(version);
     if(!bundle){if(!config.source||!remote.some(v=>v.version===version))throw Error('Версия недоступна. Укажи сервер хозяина или добавь файл обновления в Загрузки.');
       const response=await fetch(config.source+'/updates/'+version+'.qtu',{signal:AbortSignal.timeout(60000)});if(!response.ok)throw Error('Не удалось скачать обновление');const reader=response.body.getReader(),chunks=[];let size=0;const total=Number(response.headers.get('content-length'))||0;

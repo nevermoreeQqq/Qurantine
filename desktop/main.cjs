@@ -10,7 +10,7 @@ if(!app.requestSingleInstanceLock())app.quit();
 else{
   app.on('second-instance',()=>{if(window){if(window.isMinimized())window.restore();window.focus();}});
   app.whenReady().then(async()=>{
-    const baseRoot=path.resolve(__dirname,'..');
+    const baseRoot=path.resolve(__dirname,'..'),baseVersion=JSON.parse(fs.readFileSync(path.join(baseRoot,'package.json'))).version;
     const updateData=cycleTest?path.join(app.getPath('temp'),'quarantine-native-update-cycle-v6'):path.join(app.getPath('userData'),'game-updates');
     updater=createUpdater({baseRoot,dataRoot:updateData,downloads:app.getPath('downloads'),extraDirs:app.isPackaged?[]:[path.join(baseRoot,'release')],publicKey:fs.readFileSync(path.join(baseRoot,'update-public.pem'))});
     process.env.NODE_PATH=path.join(baseRoot,'node_modules');require('node:module').Module._initPaths();
@@ -40,15 +40,15 @@ else{
       await window.loadFile(launcherFile);const versions=await window.webContents.executeJavaScript('window.quarantineDesktop.checkUpdates()');
       const log=path.join(updateData,'cycle.log');if(cycleStage===0)fs.writeFileSync(log,'');fs.appendFileSync(log,JSON.stringify({stage:cycleStage,current:versions.current,available:versions.available,versions:versions.versions.map(v=>v.version)})+'\n');
       if(cycleStage===0)await window.webContents.executeJavaScript('window.quarantineDesktop.installVersion("5.0.0")');
-      else if(cycleStage===1){if(versions.current!=='5.0.0'||!versions.available)throw Error('Не обнаружена новая версия после отката');await window.loadURL(address+'/?desktop=1');const version=await window.webContents.executeJavaScript('GameContent.VERSION');if(version!==5)throw Error('Не запущена старая версия');await window.webContents.executeJavaScript('window.quarantineDesktop.installUpdate("6.0.0")');}
-      else{await window.loadURL(address+'/?desktop=1');const version=await window.webContents.executeJavaScript('GameContent.VERSION');if(version!==6||versions.current!=='6.0.0')throw Error('Обновлённая версия не запустилась');fs.appendFileSync(log,'UPDATE_CYCLE_OK\n');app.quit();}
+      else if(cycleStage===1){if(versions.current!=='5.0.0'||!versions.available)throw Error('Не обнаружена новая версия после отката');await window.loadURL(address+'/?desktop=1');const version=await window.webContents.executeJavaScript('GameContent.VERSION');if(version!==5)throw Error('Не запущена старая версия');await window.webContents.executeJavaScript(`window.quarantineDesktop.installUpdate(${JSON.stringify(baseVersion)})`);}
+      else{await window.loadURL(address+'/?desktop=1');const version=await window.webContents.executeJavaScript('GameContent.VERSION');if(version!==6||versions.current!==baseVersion)throw Error('Обновлённая версия не запустилась');fs.appendFileSync(log,'UPDATE_CYCLE_OK\n');app.quit();}
     }else if(process.argv.includes('--smoke-test')){
       await window.loadFile(launcherFile);
-      const launcher=await window.webContents.executeJavaScript('window.quarantineDesktop.checkUpdates().then(s=>({title:document.title,play:!!document.querySelector("#play"),updates:!!window.quarantineDesktop,versions:s.versions.map(v=>v.version),node:typeof require}))');
+      const launcher=await window.webContents.executeJavaScript('window.quarantineDesktop.checkUpdates().then(s=>({title:document.title,play:!!document.querySelector("#play"),updates:!!window.quarantineDesktop,current:s.current,versions:s.versions.map(v=>v.version),node:typeof require}))');
       await window.loadURL(address+'/?desktop=1');
       const state=await window.webContents.executeJavaScript('({title:document.title,canvas:!!document.querySelector("#game"),settings:!!document.querySelector("#settings-button"),version:GameContent.VERSION,update:!!document.querySelector("#update-button"),build:!!document.querySelector("#build-wheel"),map:!!document.querySelector("#minimap"),node:typeof require})');
       console.log('DESKTOP_SMOKE',JSON.stringify({launcher,game:state}));
-      if(!launcher.play||!launcher.updates||!launcher.versions.includes('4.0.0')||!launcher.versions.includes('5.0.0')||!launcher.versions.includes('6.0.0')||!state.canvas||!state.settings||!state.update||!state.build||!state.map||state.version!==6||state.node!=='undefined'){app.exit(1);return;}app.quit();
+      if(!launcher.play||!launcher.updates||launcher.current!==baseVersion||!launcher.versions.includes(baseVersion)||!launcher.versions.includes('4.0.0')||!launcher.versions.includes('5.0.0')||!launcher.versions.includes('6.0.0')||!state.canvas||!state.settings||!state.update||!state.build||!state.map||state.version!==6||state.node!=='undefined'){app.exit(1);return;}app.quit();
     }else await window.loadFile(launcherFile);
   }).catch(error=>{console.error(error);dialog.showErrorBox('Карантин',error.message);app.quit();});
   app.on('window-all-closed',()=>app.quit());
