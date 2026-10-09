@@ -14,7 +14,9 @@ function build(destination=output){
   let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
   if(!html.includes('<script src="core.js"></script>'))throw Error('Missing engine entry point');
   html=html.replace('<link rel="stylesheet" href="style.css">','<link rel="stylesheet" href="style.css">\n  <link rel="stylesheet" href="web/platform.css">');
-  html=html.replace('<script src="core.js"></script>','<script src="web/platform.js"></script>\n  <script src="core.js"></script>');
+  // Initialize the platform before game code reads preferences and saved progress.
+  html=html.replace(/<script src="([^"]+\.js)"><\/script>/g,'<script type="application/x-quarantine" data-src="$1"></script>');
+  html=html.replace('</body>','  <script src="web/platform.js"></script>\n</body>');
   const entries=[['index.html',Buffer.from(html)],...files.map(name=>[name,fs.readFileSync(path.join(root,name))])];
   const size=entries.reduce((sum,[,bytes])=>sum+bytes.length,0);if(size>100*1024*1024)throw Error('Web build exceeds 100 MB');
   fs.mkdirSync(destination,{recursive:true});for(const [name,bytes]of entries){const target=path.join(destination,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}

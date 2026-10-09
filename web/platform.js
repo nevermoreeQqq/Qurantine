@@ -64,9 +64,10 @@
   const $=id=>document.getElementById(id);
   const storage={get(key){try{return JSON.parse(localStorage.getItem(key));}catch{return null;}},set(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch{return false;}},remove(key){try{localStorage.removeItem(key);}catch{}}};
   const progressKey='quarantine-web-operation-v1';
-  const records=new Records(storage.get('quarantine-web-records-v1'),value=>storage.set('quarantine-web-records-v1',value));
+  let records=new Records(null,value=>storage.set('quarantine-web-records-v1',value));
   const lifecycle=new Lifecycle(value=>bridge.onSuspend?.(value));
   let gameLoaded=false,game=null,initializing=false;
+  const loadedScripts=new Set();
   const bridge=root.quarantinePlatform={
     soloOnly:true,
     get paused(){return lifecycle.paused;},
@@ -93,8 +94,16 @@
     if(initializing)return;initializing=true;retry.hidden=true;text.textContent='Подключение к Яндекс Играм…';
     try{
       if(!root.YaGames){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/sdk.js';script.async=true;script.onload=resolve;script.onerror=()=>{script.remove();reject(Error('Не удалось загрузить SDK Яндекс Игр. Проверь подключение и повтори попытку.'));};document.head.append(script);});}
-      const sdk=await root.YaGames.init();
-      lifecycle.attach(sdk);finish();
+      if(!lifecycle.sdk){
+        const sdk=await root.YaGames.init();lifecycle.attach(sdk);
+        records=new Records(storage.get('quarantine-web-records-v1'),value=>storage.set('quarantine-web-records-v1',value));
+      }
+      for(const entry of document.querySelectorAll('script[data-src]')){
+        const src=entry.getAttribute('data-src');if(loadedScripts.has(src))continue;
+        await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=()=>{loadedScripts.add(src);resolve();};script.onerror=()=>{script.remove();reject(Error('Не удалось загрузить игру. Проверь подключение и повтори попытку.'));};document.body.append(script);});
+      }
+      if(!gameLoaded)throw Error('Игра не запустилась. Повтори загрузку страницы.');
+      finish();
     }catch(error){text.textContent=error.message||'Не удалось подключиться к Яндекс Играм.';retry.hidden=false;}
     finally{initializing=false;}
   }
