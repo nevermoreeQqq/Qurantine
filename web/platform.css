@@ -1,0 +1,17 @@
+.web-hidden{display:none!important}
+.yandex-game,.yandex-game body{width:100%;height:100%;overflow:hidden}
+.yandex-game .app{min-height:0;padding:0 14px}
+.yandex-game .topbar{height:58px}
+.yandex-game .top-actions{flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.yandex-game .intro-card{max-height:100%;overflow:auto}
+.yandex-game.in-menu .combat-dashboard,.yandex-game.in-menu .match-tools,.yandex-game.in-menu .combat-bottom,.yandex-game.in-menu #shop-button,.yandex-game.in-menu #pause{display:none}
+.yandex-game .statusbar>span:last-child{display:none}
+.continue-operation{margin-top:10px!important;font-size:12px!important}
+[hidden]{display:none!important}
+.save-note{margin:0;padding:10px 25px;color:#adbaa1;border-top:1px solid #35432e;font:11px/1.5 Arial,sans-serif}
+.platform-loading{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:#101512;color:#e6edda}
+.platform-loading-card{padding:28px;max-width:440px;text-align:center;line-height:1.6}
+.platform-loading-card strong{font-size:28px;letter-spacing:4px;color:#caf18b}
+.platform-loading-card button{background:#caf18b;color:#101512;padding:12px 22px;border:0}
+@media(max-height:720px){.yandex-game .topbar{height:46px}.yandex-game .combat-dashboard{padding-top:5px;padding-bottom:5px}.yandex-game .match-tools{padding:4px 0}.yandex-game .combat-bottom{padding:6px 0}.yandex-game .statusbar{height:25px}.yandex-game .intro-content{padding:16px 24px}.yandex-game h1{font-size:40px}}
+@media(max-width:1000px){.yandex-game .brand small{display:none}.yandex-game .top-actions button{font-size:9px;padding:0 7px}.yandex-game .top-actions #music-button,.yandex-game .top-actions #sound{display:none}.yandex-game .combat-bottom{grid-template-columns:minmax(220px,1fr) 160px}.yandex-game .tool-summary{display:none}.yandex-game .combat-dashboard{grid-template-columns:1fr}.yandex-game .dashboard-loadout{display:none}}
