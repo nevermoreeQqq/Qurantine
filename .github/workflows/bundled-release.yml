@@ -19,14 +19,17 @@ jobs:
         include:
           - runner: windows-latest
             script: build:win
+            publishArgs: '-- --publish never'
             verify: node tools/verify-windows.cjs
             asset: release/Quarantine-Setup-*.exe
           - runner: macos-15-intel
             script: build:mac:intel
+            publishArgs: ''
             verify: npm run verify:mac -- x64
             asset: release/Quarantine-*-macOS-x64.dmg
           - runner: macos-15
             script: build:mac:silicon
+            publishArgs: ''
             verify: npm run verify:mac -- arm64
             asset: release/Quarantine-*-macOS-arm64.dmg
     runs-on: ${{ matrix.runner }}
@@ -39,7 +42,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run ${{ matrix.script }} -- --publish never
+      - run: npm run ${{ matrix.script }} ${{ matrix.publishArgs }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - run: ${{ matrix.verify }}
