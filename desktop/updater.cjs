@@ -25,8 +25,9 @@ function createUpdater({baseRoot,dataRoot,downloads,extraDirs=[],publicKey,relea
   if(config.baseVersion!==baseVersion&&config.active&&compare(config.active,baseVersion)<0)config.active=null;
   config.baseVersion=baseVersion;save();
   let current=baseVersion,installed=current;
-  const bundles=new Map();
-  function scan(){for(const dir of [path.join(baseRoot,'assets'),archives,downloads,...extraDirs]){if(!dir)continue;let names;try{names=fs.readdirSync(dir);}catch{continue;}for(const name of names){const game=/^Quarantine-Game-(\d+\.\d+\.\d+)\.qtg$/.exec(name);if(!game&&!/^((Quarantine-Update-\d+\.\d+\.\d+)|update(-\d+\.\d+\.\d+)?)\.qtu$/.test(name))continue;try{const file=path.join(dir,name),bytes=fs.readFileSync(file),bundle=game?readGame(bytes,config.verified[game[1]]):readBundle(bytes,publicKey);bundles.set(bundle.version,{...bundle,file});}catch{}}}}
+  const bundles=new Map(),scanned=new Map();
+  // Repeated in-game checks must not decompress unchanged archives on the server thread.
+  function scan(){for(const dir of [path.join(baseRoot,'assets'),archives,downloads,...extraDirs]){if(!dir)continue;let names;try{names=fs.readdirSync(dir);}catch{continue;}for(const name of names){const game=/^Quarantine-Game-(\d+\.\d+\.\d+)\.qtg$/.exec(name);if(!game&&!/^((Quarantine-Update-\d+\.\d+\.\d+)|update(-\d+\.\d+\.\d+)?)\.qtu$/.test(name))continue;try{const file=path.join(dir,name),stat=fs.statSync(file),stamp=stat.size+':'+stat.mtimeMs+':'+stat.ctimeMs;if(!stat.isFile()||stat.size>(game?64:8)*1024*1024||scanned.get(file)===stamp)continue;const bytes=fs.readFileSync(file),bundle=game?readGame(bytes,config.verified[game[1]]):readBundle(bytes,publicKey);bundles.set(bundle.version,{...bundle,file});scanned.set(file,stamp);}catch{}}}}
   scan();
   function activate(bundle){
     const archiveName=bundle.format===2?`Quarantine-Game-${bundle.version}.qtg`:`Quarantine-Update-${bundle.version}.qtu`;
