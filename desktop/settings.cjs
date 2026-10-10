@@ -1,12 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const DEFAULTS = { memoryMB: 2048, launcherMusic: true, launcherVolume: 35, gameMusic: true, gameEffects: true, gameMusicVolume: 32 };
+const DEFAULTS = { memoryMB: 2048, launcherMusic: true, launcherEffects: true, launcherVolume: 35, gameMusic: true, gameEffects: true, gameMusicVolume: 32 };
 function normalize(value = {}, totalMemory = os.totalmem()) {
   const budget = totalMemory / 1024 / 1024 * .75;
   const maxMemoryMB = [512, 1024, 2048, 4096, 8192].filter(size => size <= budget).at(-1) || 512;
   const settings = { ...DEFAULTS };
-  for (const name of ['launcherMusic', 'gameMusic', 'gameEffects']) if (typeof value[name] === 'boolean') settings[name] = value[name];
+  for (const name of ['launcherMusic', 'launcherEffects', 'gameMusic', 'gameEffects']) if (typeof value[name] === 'boolean') settings[name] = value[name];
   for (const name of ['launcherVolume', 'gameMusicVolume']) if (Number.isFinite(value[name])) settings[name] = Math.round(Math.max(0, Math.min(100, value[name])));
   if ([512, 1024, 2048, 4096, 8192].includes(value.memoryMB)) settings.memoryMB = value.memoryMB;
   settings.memoryMB = Math.min(settings.memoryMB, maxMemoryMB);
