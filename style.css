@@ -191,3 +191,49 @@ body.graphite{--bg:#08090b;--panel:#141518;--line:#2b2d33;--muted:#a0a4ad;--text
 @media(max-width:650px){.yandex-game .graphite .combat-dashboard{grid-template-columns:1fr 66px}.yandex-game .graphite .combat-bottom{grid-template-columns:110px minmax(120px,1fr)}.graphite .tool-summary{bottom:calc(100% + 120px)}.graphite .combat-bottom .hud-label{flex-wrap:wrap}.graphite .combat-bottom .hud-label strong{flex-basis:100%;margin-left:0;font-size:18px}}
 @media(max-width:900px){.graphite .intro-card[data-menu-view=home]>.graphite-home{gap:50px;padding:40px 10px}.graphite-title h1{font-size:42px}.graphite .top-actions #update-button,.graphite .top-actions #launcher-button{display:none}.graphite .combat-bottom{grid-template-columns:160px minmax(190px,1fr) 130px}.graphite .combat-bottom #weapon-icon{display:none}.graphite .match-tools>button{padding:8px;font-size:10px}}
 @media(max-width:650px){.graphite .app,.yandex-game .graphite .app{padding:0 8px;min-height:480px}.graphite .topbar,.yandex-game .graphite .topbar{height:52px}.graphite .top-actions{gap:4px}.graphite .top-actions button{font-size:10px;padding:0 8px}.graphite #network-status{display:none}.graphite .intro-card[data-menu-view=home]>.graphite-home{grid-template-columns:1fr;gap:30px;padding:24px 0}.graphite-home-footer{gap:12px;flex-wrap:wrap}.graphite .overlay{padding:18px}.graphite .mode-selector{padding:16px}.graphite .mode-selector>span{flex-basis:100%}.graphite .mode-selector button{padding:10px 12px}.graphite .intro-content{padding:20px 0}.graphite .intro-copy h1{font-size:26px}.graphite .intro-controls{padding:16px 0}.graphite .server-row,.graphite .party-selector,.graphite .coop-lobby{padding:12px 0}.graphite .party-selector{flex-wrap:wrap}.graphite .combat-dashboard{left:10px;right:10px;top:10px;grid-template-columns:1fr 66px}.graphite .combat-dashboard .map-panel{display:none!important}.graphite .combat-dashboard .wave-panel{min-width:100px;padding:10px}.graphite .combat-bottom{left:10px;right:10px;bottom:10px;grid-template-columns:110px minmax(120px,1fr);gap:6px}.graphite .combat-bottom .health-panel{padding:12px 10px}.graphite .combat-bottom .weapon-panel{padding:12px 10px;width:100%}.graphite .combat-bottom .weapon-line{gap:4px;flex-wrap:wrap}.graphite .combat-bottom .weapon-line>span{min-width:0}.graphite .combat-bottom .ammo{min-width:0}.graphite .combat-bottom .ammo strong{font-size:24px}.graphite .combat-bottom .weapon-footer{flex-wrap:wrap;gap:4px;font-size:10px}.graphite .combat-bottom .grenade-panel{position:absolute;bottom:110px;right:0;width:110px;padding:10px}.graphite .combat-bottom .grenade-panel>.hud-sub:last-child{display:none}.graphite .match-tools{left:10px;right:130px;bottom:125px;gap:4px}.graphite .match-tools #night-status{margin-left:0}.graphite .match-tools>button{font-size:10px;padding:6px 8px}.graphite .tool-summary{font-size:11px}.graphite .wave-announcement{font-size:20px}.graphite .bindings-grid{grid-template-columns:1fr}.graphite .shop-grid{grid-template-columns:1fr}.graphite .settings-card,.graphite .shop-card{width:100%;padding:16px}.graphite .shop-tabs button{font-size:11px;padding:8px}.graphite #settings-overlay,.graphite #shop-overlay{inset:52px 8px 28px}.graphite .toast{bottom:210px;font-size:11px}}
+
+/* The selected Graphite HUD: wave above; health, ammunition and wallet below. */
+.graphite.in-menu #hud-details-button{display:none}
+.graphite .combat-dashboard,.yandex-game .graphite .combat-dashboard{grid-template-columns:1fr;gap:10px}
+.graphite .combat-dashboard .wave-panel{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;padding:12px 16px}
+.graphite .combat-dashboard .wave-panel strong{font-size:16px;margin:0}
+.graphite .squad-strip:has(.team-list:empty):not(:has(.vote-panel:not(.hidden),.timeout-panel:not(.hidden))){display:none}
+.graphite .combat-bottom,.yandex-game .graphite .combat-bottom{grid-template-columns:180px minmax(150px,1fr) 160px;align-items:end}
+.graphite .combat-bottom .health-panel{padding:12px 16px}
+.graphite .combat-bottom .hud-label{font-size:12px;gap:8px}
+.graphite .combat-bottom .hud-label strong{font-size:14px}
+.graphite .combat-bottom .health-track{margin-bottom:0}
+.graphite .combat-bottom .weapon-panel{width:auto;min-width:160px;justify-self:center;padding:12px 16px}
+.graphite .combat-bottom .weapon-line{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.graphite .combat-bottom #weapon-icon,.graphite .combat-bottom .weapon-footer{display:none}
+.graphite .combat-bottom .weapon-line>span b{font-size:12px;font-weight:400}
+.graphite .combat-bottom .ammo{margin:0;min-width:0;display:flex;align-items:baseline;gap:5px;text-align:left}
+.graphite .combat-bottom .ammo strong{font-size:25px;line-height:1.2}
+.graphite .combat-bottom .ammo>span{font-size:12px}
+.graphite .wallet-panel{pointer-events:auto;background:#101114;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;font-size:12px}
+.graphite .wallet-panel>div{display:flex;justify-content:space-between;gap:12px}
+.graphite .wallet-panel #gold-number{font-size:14px;font-weight:500;margin:0;white-space:nowrap}
+.graphite .wallet-panel #shop-button{background:none;border:0;color:var(--muted);padding:0;align-self:flex-start;font-size:12px;text-align:left}
+.graphite .wallet-panel #shop-button:hover{color:var(--text)}
+.graphite .hud-details{position:absolute;top:18px;right:18px;width:300px;max-width:calc(100% - 36px);max-height:calc(100% - 140px);overflow:auto;z-index:4;background:#101114;border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr;gap:12px;font-size:12px}
+.graphite .hud-details .score-panel{position:static;display:flex;align-items:center;justify-content:space-between;gap:10px;width:auto;padding:0;background:none;margin:0;text-align:left}
+.graphite .hud-details .score-panel strong{font:500 16px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;color:var(--text)}
+.graphite .hud-details .score-panel span{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted)}
+.graphite .hud-details #enemy-number{color:var(--muted);font-size:12px}
+.graphite .hud-details .map-panel{position:static;display:grid;grid-template-columns:1fr 24px;gap:8px;padding:0;background:none;border:0}
+.graphite .hud-details #minimap{width:100%;height:116px}
+.graphite .hud-details .grenade-panel{position:static;width:auto;padding:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:none}
+.graphite .hud-details .grenade-panel>div{margin:0}
+.graphite .hud-details .grenade-panel>.hud-sub:first-child{flex-basis:100%}
+.graphite .hud-details .grenade-panel strong{font:500 20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .hud-details .grenade-panel .hud-sub{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .hud-details #grenade-icon{width:28px;height:28px}
+.graphite .hud-details .match-tools{position:static;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}
+.graphite .hud-details .match-tools>button{background:#22242a;font-size:11px;padding:8px}
+.graphite .hud-details .match-tools #night-status{margin-left:0;flex-basis:100%;padding:4px 0}
+.graphite .hud-details #timeout-button{background:#22242a;font-size:11px;justify-self:start}
+.graphite .tool-summary{bottom:calc(100% + 12px)}
+@media(max-width:650px){.graphite .combat-bottom,.yandex-game .graphite .combat-bottom{grid-template-columns:minmax(95px,1fr) minmax(100px,1fr) minmax(95px,1fr);gap:6px}.graphite .combat-bottom .health-panel,.graphite .combat-bottom .weapon-panel,.graphite .wallet-panel{padding:10px;min-width:0}.graphite .combat-bottom .hud-label strong{font-size:14px}.graphite .combat-bottom .weapon-panel{width:auto;justify-self:stretch}.graphite .wallet-panel>div{flex-wrap:wrap;gap:4px}.graphite .wallet-panel #gold-number{flex-basis:100%}.graphite .wallet-panel #shop-button{font-size:11px}.graphite .hud-details{right:10px;top:10px;max-width:calc(100% - 20px)}.graphite .top-actions #hud-details-button{font-size:10px}}
+.graphite .combat-bottom .weapon-panel.reloading .weapon-footer{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.graphite .combat-bottom .weapon-panel.reloading .weapon-footer>span:last-child{display:none}
+.graphite .hud-details .map-panel>div:not(.map-controls){display:none}

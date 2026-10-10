@@ -52,7 +52,7 @@
   function renderBindings(){updateControlLabels();const grid=$('bindings-grid');grid.replaceChildren();for(const [action,name]of Object.entries(GameControls.LABELS)){const row=document.createElement('label'),button=document.createElement('button');row.textContent=name;button.textContent=label(action);button.className='binding-button';button.addEventListener('click',()=>{waitingBinding=action;button.textContent='НАЖМИ КЛАВИШУ…';$('binding-prompt').textContent='Назначение: '+name;});row.append(button);grid.append(row);}}
   let labelsSignature='';
   function updateControlLabels(){const signature=JSON.stringify(bindings.map);if(signature===labelsSignature)return;labelsSignature=signature;
-    $('shop-button').firstChild.textContent=label('shop')+' · МАГАЗИН ';
+    $('shop-button').firstChild.textContent='Магазин · '+label('shop');
     const strip=document.querySelector('.utility-strip').children;for(const [i,key]of [[0,'shuriken'],[1,'boards'],[2,'door']])strip[i].firstChild.textContent=label(key)+' · ';strip[3].textContent=label('shop')+' · МАГАЗИН';
     document.querySelector('.grenade-panel>.key').textContent=label('grenade');document.querySelector('.grenade-panel>span:last-child').textContent='БРОСОК · '+label('cycle')+' СМЕНА';document.querySelector('.weapon-footer>span:last-child').textContent=label('reload')+' · ПЕРЕЗАРЯДКА';
     if($('weapon-wheel-button')){$('weapon-wheel-button').textContent=label('weaponWheel')+' · ОРУЖИЕ';$('grenade-wheel-button').textContent=label('grenadeWheel')+' · ГРАНАТЫ';$('build-wheel-button').textContent=label('build')+' · ПОСТРОЙКИ';}document.querySelector('.shop-help').textContent='Молоток: '+label('fire')+' улучшить или ударить, '+label('repair')+' починить. Камень 120 ◉ → железо 240 ◉ → сталь 450 ◉ → композит 800 ◉. Ремонт +260 HP: 12 ◉. Кнопки меняются в настройках.';
@@ -127,6 +127,7 @@
     }
   }
   function updateHud(){updateControlLabels();const p=me();if(!p)return;const w=WEAPONS[p.weapon],wc=$('weapon-icon').getContext('2d');wc.setTransform(1,0,0,1,0,0);wc.clearRect(0,0,112,44);wc.translate(18,23);art.weapon(wc,{...p,recoil:0,swing:0},world.elapsed);$('health-number').innerHTML=`${Math.ceil(p.hp)} <small>/ 100</small>`;$('health-bar').style.width=p.hp+'%';$('health-bar').style.background=p.hp<30?'var(--red)':'var(--lime)';$('health-status').textContent=p.hp<=0?'ОЖИДАНИЕ СЛЕДУЮЩЕЙ ВОЛНЫ':p.hp<30?'КРИТИЧЕСКОЕ':p.hp<65?'РАНЕНИЕ':'СТАБИЛЬНО';$('wave-number').textContent=String(Math.max(1,world.wave)).padStart(2,'0');$('enemy-number').textContent=world.wave?world.intermission>0?`ПЕРЕДЫШКА · ${Math.ceil(world.intermission)} СЕК`:`${world.enemies.length+world.pending} ЦЕЛЕЙ ОСТАЛОСЬ`:'ОЖИДАНИЕ КОНТАКТА';$('kill-number').textContent=String(p.kills).padStart(3,'0');$('timer').textContent=timeText(world.elapsed);$('weapon-name').textContent=w.name;$('weapon-detail').textContent=p.weapon==='hammer'?`ПРОЧНОСТЬ ${p.hammerDurability}/35 · ${label('fire')} УЛУЧШИТЬ / ${label('repair')} ЧИНИТЬ`:p.weapon==='flame'?'ТОПЛИВО / ГОРЕНИЕ':`${w.damage} УРОН / СКОРОСТЬ ${Math.round(w.speed*100)}%`;$('mag-number').textContent=p.weapon==='flame'?p.fuel:p.weapon==='hammer'?p.hammerDurability:String(p.clips[p.weapon]).padStart(2,'0');$('reserve-number').textContent=p.weapon==='hammer'?'ПРОЧНОСТЬ':p.weapon==='flame'?'ТОПЛИВО':p.weapon==='pistol'?'∞ · 9 мм':`${p.reserve} · ${AMMO[w.ammo].name}`;$('reload-label').textContent=p.reload>0?`ПЕРЕЗАРЯДКА · ${p.reload.toFixed(1)} С`:'ЛКМ · ОГОНЬ';$('grenade-name').textContent=names[p.nadeType];const gc=$('grenade-icon').getContext('2d');gc.setTransform(1,0,0,1,0,0);gc.clearRect(0,0,70,70);gc.translate(35,39);gc.scale(1.9,1.9);art.grenade(gc,{type:p.nadeType,x:0,y:0,age:0,life:1},world.elapsed,true);$('grenade-number').textContent=String(p.nades[p.nadeType]).padStart(2,'0');$('gold-number').textContent=p.gold+' ◉';$('shuriken-number').textContent=p.shurikens;$('boards-number').textContent=p.boards;$('doors-number').textContent=p.doors;
+    document.querySelector('.weapon-panel').classList.toggle('reloading',p.reload>0);
     $('armor-panel').classList.toggle('hidden',p.armor<=0);$('armor-number').textContent=Math.ceil(p.armor);$('armor-bar').style.width=p.armor+'%';$('shop-button').title=label('shop')+' · магазин';
     $('reload-label').textContent=p.reload>0?'ПЕРЕЗАРЯДКА · '+p.reload.toFixed(1)+' С':label('fire')+' · '+(p.weapon==='hammer'?'УДАР / УЛУЧШИТЬ':'ОГОНЬ');
     $('network-status').textContent=network?`${network.room} · ${world.players.length}/${world.maxPlayers||4}${network.connected?` · ${network.ping??'…'} мс${network.lagging?' · ЗАДЕРЖКА':''}`:' · НЕТ СВЯЗИ'}`:'СОЛО';$('operation-status').textContent=mode==='menu'?'ГОТОВ К ОПЕРАЦИИ':world.state==='over'?'СИГНАЛ ПОТЕРЯН':network?world.state==='waiting'?'СБОР ОТРЯДА':'КООПЕРАТИВ · БОЙ ПРОДОЛЖАЕТСЯ':mode==='playing'?'ОПЕРАЦИЯ АКТИВНА':'ОПЕРАЦИЯ ПРИОСТАНОВЛЕНА';
@@ -162,15 +163,27 @@
   if(platform)$('menu-coop').classList.add('hidden');
   const dashboard=document.querySelector('.combat-dashboard'),matchTools=document.querySelector('.match-tools');
   bottom.prepend(document.querySelector('.health-panel'));
-  gameShell.append(dashboard,matchTools,bottom);
+  const wallet=document.createElement('div');wallet.className='wallet-panel';
+  const walletLabel=document.createElement('div');walletLabel.append('Монеты ', $('gold-number'));
+  wallet.append(walletLabel,$('shop-button'));bottom.append(wallet);
+  const hudDetails=document.createElement('aside');hudDetails.id='hud-detail-panels';hudDetails.className='hud-details hidden';hudDetails.setAttribute('aria-label','Дополнительные данные боя');
+  hudDetails.append(document.querySelector('.score-panel'),$('enemy-number'),document.querySelector('.map-panel'),document.querySelector('.grenade-panel'),matchTools,$('timeout-button'));
+  const hudToggle=document.createElement('button');hudToggle.id='hud-details-button';hudToggle.textContent='Подробнее';hudToggle.setAttribute('aria-controls',hudDetails.id);hudToggle.setAttribute('aria-expanded','false');
+  function closeHudDetails(){hudDetails.classList.add('hidden');hudToggle.setAttribute('aria-expanded','false');}
+  hudToggle.addEventListener('click',()=>{const opening=hudDetails.classList.contains('hidden');hudDetails.classList.toggle('hidden',!opening);hudToggle.setAttribute('aria-expanded',String(opening));if(!opening)canvas.focus({preventScroll:true});});
+  document.querySelector('.top-actions').insertBefore(hudToggle,$('pause'));
+  gameShell.append(dashboard,bottom,hudDetails);
   function syncMenuPresentation(){
     const visible=!$('overlay').classList.contains('hidden');
     document.body.classList.toggle('in-menu',visible);
-    if(visible)menuCard.dataset.menuView='home';
+    if(visible){menuCard.dataset.menuView='home';closeHudDetails();}
     resize();
   }
   new MutationObserver(syncMenuPresentation).observe($('overlay'),{attributes:true,attributeFilter:['class']});
   window.addEventListener('keydown',event=>{
+    if(event.code==='Escape'&&mode==='playing'&&!hudDetails.classList.contains('hidden')){
+      event.preventDefault();event.stopImmediatePropagation();closeHudDetails();canvas.focus({preventScroll:true});return;
+    }
     if(event.code==='Escape'&&mode==='menu'&&!$('overlay').classList.contains('hidden')&&menuCard.dataset.menuView!=='home'){
       event.preventDefault();event.stopImmediatePropagation();menuView('home');
     }
