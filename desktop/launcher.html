@@ -1,5 +1,68 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Карантин — Лаунчер</title><link rel="stylesheet" href="launcher.css"></head><body>
-<main><header><span class="logo">☣</span><div><small>ПРОТОКОЛ ВЫЖИВАНИЯ</small><h1>КАРАНТИН</h1></div><span class="badge">ЛАУНЧЕР</span></header>
-<section class="hero"><div><small>ДЕРЖИ ПЕРИМЕТР</small><h2>Отряд готов.<br>Пора выживать.</h2><p>Одиночная игра и кооператив до четырёх бойцов.<br>Выбери версию и возвращайся на «Кордон».</p></div><div class="play"><span id="current-version">Версия…</span><button id="play">ИГРАТЬ ↗</button><button id="latest" class="secondary" disabled>ПРОВЕРКА ОБНОВЛЕНИЙ…</button></div></section>
-<div class="source"><label for="source">СЕРВЕР ОБНОВЛЕНИЙ / АДРЕС ХОЗЯИНА</label><div><input id="source" placeholder="http://192.168.1.10:5173"><button id="refresh" class="secondary">ПРОВЕРИТЬ</button></div><p>Новые версии приходят с сервера хозяина. Готовые файлы .qtu из «Загрузок» обнаруживаются автоматически.</p></div>
-<section class="versions"><div class="section-title"><h3>Доступные версии</h3><button id="import" class="secondary">ДОБАВИТЬ ФАЙЛ ОБНОВЛЕНИЯ</button></div><div id="versions"></div></section><footer><span id="status" role="status">Проверяем версии…</span><progress id="progress" max="100" value="0" hidden></progress></footer></main><script src="launcher.js"></script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' blob: file:; connect-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Карантин — Лаунчер</title><link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="#home" aria-label="Карантин — главная"><span class="brand-mark">Q</span><span>КАРАНТИН<small>ПРОТОКОЛ ВЫЖИВАНИЯ</small></span></a>
+<nav aria-label="Разделы лаунчера"><button class="nav-button active" data-page="home">Обзор</button><button class="nav-button" data-page="versions">Версии игры <span id="version-count">1</span></button><button class="nav-button" data-page="news">Новости</button></nav>
+<button id="open-settings" class="icon-button settings-button" aria-label="Настройки лаунчера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 3-1 3-3 1-2 4 2 2 1 4 3 1 2 3 3-1 1-3 3-1 2-4-2-2-1-4-3-1Z"/><circle cx="12" cy="12" r="3"/></svg><span>Настройки</span></button>
+</header>
+<main>
+<section class="hero" aria-labelledby="hero-title">
+<div class="hero-grid"></div><div class="hero-content">
+<p class="eyebrow"><span class="live-dot"></span> КОРДОН / ЗОНА 04</p>
+<h1 id="hero-title">ДЕРЖИ<br><em>ПЕРИМЕТР.</em></h1>
+<p class="hero-description">Город заражён. Отряд ещё жив.<br>Собирай оружие, укрепляй оборону и переживи следующую волну.</p>
+<div class="hero-tags"><span>2D SURVIVAL</span><span>КООПЕРАТИВ 1—4</span><span>БЕСКОНЕЧНЫЕ ВОЛНЫ</span></div>
+</div>
+<div class="launch-panel">
+<div class="launch-version"><span class="ready-dot"></span><span id="current-version">Загружаем версию…</span><span class="chip">УСТАНОВЛЕНА</span></div>
+<button id="play" class="play-button">ИГРАТЬ <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg></button>
+<button id="latest" class="update-button" disabled>Проверка GitHub…</button>
+<div class="launch-details"><span>ЛАУНЧЕР 1.0</span><span>ОБНОВЛЯЕТСЯ ТОЛЬКО ИГРА</span></div>
+</div>
+<span class="hero-coordinate">54° N / 04° E &nbsp; · &nbsp; СИГНАЛ СТАБИЛЕН</span>
+</section>
+<section id="page-home" class="page">
+<div class="section-heading"><div><p class="eyebrow">НОВОСТИ КОРДОНА</p><h2>Контакт без пересечений</h2></div><span class="outline-chip">ОБНОВЛЕНИЕ 6.0.1</span></div>
+<div class="overview-grid">
+<article class="news-feature">
+<div class="video-frame"><video id="collision-video" src="media/collision-6.0.1.webm" muted loop playsinline controls preload="metadata" poster="media/collision-poster.svg" aria-label="Демонстрация исправления коллизий игрока и мутантов"></video><span class="video-tag">6.0.1 · КОЛЛИЗИИ</span></div>
+<div class="feature-copy"><span class="news-type">УЖЕ В ИГРЕ</span><h3>Мутанты держат дистанцию</h3><p>Враги упираются в персонажа, а не проходят сквозь него. Можно отступить, обойти толпу и попасть выстрелом в упор. В кооперативе работают те же правила.</p><div class="feature-tags"><span>Физика контакта</span><span>Стрельба в упор</span><span>Кооператив</span></div></div>
+</article>
+<aside class="roadmap"><div class="roadmap-heading"><span class="news-type">В ПЛАНАХ</span><h3>За пределами кордона</h3><p>Направления будущих улучшений.<br>Даты объявим в следующих сводках.</p></div>
+<article><span class="roadmap-icon">01</span><div><h4>Графика и атмосфера</h4><p>Больше деталей окружения, выразительные мутанты и эффекты боя.</p></div><span class="plan-dot"></span></article>
+<article><span class="roadmap-icon">02</span><div><h4>Новые зоны</h4><p>Разные места для обороны, маршруты и укрытия.</p></div><span class="plan-dot"></span></article>
+<article><span class="roadmap-icon">03</span><div><h4>Оружие и баланс</h4><p>Новый арсенал, настройки урона и больше тактики для отряда.</p></div><span class="plan-dot"></span></article>
+</aside>
+</div>
+</section>
+<section id="page-versions" class="page" hidden>
+<div class="section-heading"><div><p class="eyebrow">АРХИВ КОРДОНА</p><h2>Версии игры</h2></div><button id="refresh" class="secondary">Проверить GitHub ↻</button></div>
+<p class="section-description">Скачивай новые версии или возвращайся к сохранённым. Лаунчер остаётся тем же. Для совместной игры у всех должна быть одинаковая версия.</p>
+<div id="versions" class="version-grid"></div>
+</section>
+<section id="page-news" class="page" hidden>
+<div class="section-heading"><div><p class="eyebrow">СВЯЗЬ СО ШТАБОМ</p><h2>Новости обновлений</h2></div><span class="outline-chip">GITHUB RELEASES</span></div>
+<article class="news-entry"><span class="news-type">6.0.1 · УЖЕ В ИГРЕ</span><h3>Исправлены коллизии игроков и мутантов</h3><p>Контактные атаки и рывки сохраняют дистанцию. Выстрелы в упор попадают в ближайшего врага. Предсказание движения в кооперативе учитывает столкновения.</p><button class="text-button" id="watch-collision">Смотреть короткое видео →</button></article>
+<div id="release-news"></div>
+</section>
+<footer><div class="connection"><span id="connection-dot" class="ready-dot"></span><span id="status" role="status" aria-live="polite">Проверяем GitHub Releases…</span><progress id="progress" max="100" value="0" hidden></progress></div><button id="music-toggle" class="music-toggle" aria-label="Включить или выключить музыку"><span class="equalizer"><i></i><i></i><i></i><i></i></span><span id="music-label">Сигнал периметра · включить</span></button></footer>
+</main>
+<dialog id="settings-dialog" aria-labelledby="settings-title">
+<div class="dialog-heading"><div><p class="eyebrow">ЛИЧНЫЙ ПРОТОКОЛ</p><h2 id="settings-title">Настройки</h2></div><button id="close-settings" class="icon-button close-button" aria-label="Закрыть настройки"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+<form id="settings-form">
+<fieldset><legend>Производительность</legend><label class="setting-row" for="memory"><span>Память игрового окна<small id="memory-detail">Лимит памяти JavaScript</small></span><select id="memory"><option value="512">512 МБ</option><option value="1024">1 ГБ</option><option value="2048">2 ГБ</option><option value="4096">4 ГБ</option><option value="8192">8 ГБ</option></select></label><p class="setting-help">Применится после перезапуска приложения. Это лимит памяти JavaScript; общая память приложения может быть выше.</p></fieldset>
+<fieldset><legend>Звук лаунчера</legend><label class="setting-row"><span>Музыка<small>«Сигнал периметра» · dark ambient</small></span><input type="checkbox" id="launcher-music" class="switch"></label><label class="setting-row range-row"><span>Громкость <output id="launcher-volume-value">35%</output></span><input type="range" id="launcher-volume" min="0" max="100" value="35"></label></fieldset>
+<fieldset><legend>Звук игры</legend><label class="setting-row"><span>Музыка в игре</span><input type="checkbox" id="game-music" class="switch"></label><label class="setting-row"><span>Выстрелы, взрывы и остальные эффекты</span><input type="checkbox" id="game-effects" class="switch"></label><label class="setting-row range-row"><span>Громкость музыки <output id="game-volume-value">32%</output></span><input type="range" id="game-volume" min="0" max="100" value="32"></label><p class="setting-help">Настройки звука игры применятся при следующем запуске игры из лаунчера.</p></fieldset>
+<div class="dialog-footer"><span id="settings-status" role="status"></span><button type="submit" class="primary">Сохранить настройки</button></div>
+</form>
+</dialog>
+<script src="launcher-music.js"></script><script src="launcher.js"></script>
+</body>
+</html>

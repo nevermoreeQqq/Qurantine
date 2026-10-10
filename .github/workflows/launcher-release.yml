@@ -1,0 +1,67 @@
+name: Publish permanent launcher
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: permanent-launcher
+  cancel-in-progress: false
+
+jobs:
+  launcher:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            script: build:launcher:win
+            verify: node tools/verify-windows.cjs
+            asset: release/Quarantine-Launcher-Setup.exe
+          - runner: macos-15-intel
+            script: build:launcher:mac:intel
+            verify: npm run verify:mac -- x64
+            asset: release/Quarantine-Launcher-macOS-x64.dmg
+          - runner: macos-15
+            script: build:launcher:mac:silicon
+            verify: npm run verify:mac -- arm64
+            asset: release/Quarantine-Launcher-macOS-arm64.dmg
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run ${{ matrix.script }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: ${{ matrix.verify }}
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: launcher-${{ matrix.runner }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+  publish:
+    needs: launcher
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: launcher-*
+          merge-multiple: true
+          path: launcher
+      - name: Publish at one permanent release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view launcher-v1.0.0 >/dev/null 2>&1; then
+            gh release create launcher-v1.0.0 --target "$GITHUB_SHA" --title "Карантин — Лаунчер" --notes "Установите один раз. Новые версии игры скачиваются внутри лаунчера." --latest=false
+          fi
+          gh release upload launcher-v1.0.0 launcher/* --clobber

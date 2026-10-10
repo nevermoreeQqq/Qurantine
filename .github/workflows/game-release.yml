@@ -1,0 +1,48 @@
+name: Publish game version
+
+on:
+  push:
+    tags: ['v[0-9]*.[0-9]*.[0-9]*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: game-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --omit=dev --ignore-scripts
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node -e 'if (process.env.RELEASE_TAG !== "v" + require("./package.json").version) throw Error("Tag must match package.json")'
+      - run: npm test
+      - run: npm run pack:game
+      - name: Include an optional short news clip
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -f "news/${VERSION}.webm" ]; then
+            cp "news/${VERSION}.webm" "release/Quarantine-News-${VERSION}.webm"
+          fi
+      - name: Publish only the game package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "Карантин ${GITHUB_REF_NAME#v}" --generate-notes
+          fi
+          gh release upload "$GITHUB_REF_NAME" release/Quarantine-Game-*.qtg release/Quarantine-Game-*.qtg.sha256 --clobber
+          if compgen -G "release/Quarantine-News-*.webm" >/dev/null; then
+            gh release upload "$GITHUB_REF_NAME" release/Quarantine-News-*.webm --clobber
+          fi
