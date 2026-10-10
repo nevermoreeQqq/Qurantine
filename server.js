@@ -7,6 +7,11 @@ const {Simulation}=require('./simulation.js');
 const {VERSION}=require('./content.js');
 const root=__dirname,mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webm':'video/webm'};
 function createGameServer(options={}){
+  const roomLimit=Number(options.roomLimit??process.env.QUARANTINE_ROOM_LIMIT??30);
+  if(!Number.isInteger(roomLimit)||roomLimit<1||roomLimit>30)throw Error('Лимит комнат должен быть от 1 до 30');
+  const configuredAddress=options.publicAddress??process.env.QUARANTINE_PUBLIC_URL;
+  let publicAddress;
+  if(configuredAddress){const address=new URL(configuredAddress);if(!['http:','https:'].includes(address.protocol)||address.username||address.password||address.pathname!=='/'||address.search||address.hash)throw Error('Публичный адрес должен быть http:// или https:// без пути и пароля');publicAddress=address.origin;}
   const newSimulation=options.simulationFactory||(opts=>new Simulation(Math.random,opts));
   const updateHandler=options.updateHandler||serveUpdates;
   const rooms=new Map(),sessions=new Map(),sockets=new WebSocketServer({noServer:true,maxPayload:16384,perMessageDeflate:{threshold:2048,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:3}}});
@@ -38,11 +43,11 @@ function createGameServer(options={}){
       if(req.headers.origin){let allowed=false;try{const origin=new URL(req.headers.origin);allowed=origin.host===req.headers.host||['localhost','127.0.0.1','[::1]'].includes(origin.hostname);}catch{}if(!allowed)return json(res,403,{error:'Этот источник не разрешён'});res.setHeader('Access-Control-Allow-Origin',req.headers.origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type, X-Session');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}}
       const url=new URL(req.url,'http://localhost');
       if(await updateHandler(req,res,url))return;
-      if(url.pathname==='/api/info')return json(res,200,{version:VERSION,appVersion:require('./package.json').version,maxPlayers:4,addresses:Object.values(require('node:os').networkInterfaces()).flat().filter(a=>a?.family==='IPv4'&&!a.internal).map(a=>'http://'+a.address+':'+server.address().port)});
+      if(url.pathname==='/api/info')return json(res,200,{version:VERSION,appVersion:require('./package.json').version,maxPlayers:4,addresses:publicAddress?[publicAddress]:Object.values(require('node:os').networkInterfaces()).flat().filter(a=>a?.family==='IPv4'&&!a.internal).map(a=>'http://'+a.address+':'+server.address().port)});
       if(url.pathname==='/api/join'&&req.method==='POST'){
         const data=await body(req);if(data.version!==undefined&&data.version!==VERSION)return json(res,409,{error:'Версии игры отличаются. Обновите приложение на обоих компьютерах.'});let code=String(data.room||'').trim().toUpperCase(),room;
         if(code){room=rooms.get(code);if(!room)return json(res,404,{error:'Комната не найдена. Проверь код.'});if(room.game.state==='over')return json(res,409,{error:'Матч завершён. Хозяин должен начать заново.'});}
-        else{if(rooms.size>=30)return json(res,503,{error:'Сервер занят'});do{code=crypto.randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));room={code,game:newSimulation({difficulty:data.difficulty,maxPlayers:data.maxPlayers}),streams:new Map(),sockets:new Map(),clock:0,round:1,host:null,touched:Date.now()};rooms.set(code,room);}
+        else{if(rooms.size>=roomLimit)return json(res,503,{error:'Сервер занят'});do{code=crypto.randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));room={code,game:newSimulation({difficulty:data.difficulty,maxPlayers:data.maxPlayers}),streams:new Map(),sockets:new Map(),clock:0,round:1,host:null,touched:Date.now()};rooms.set(code,room);}
         if(room.game.players.length>=(room.game.maxPlayers||4))return json(res,409,{error:'Комната заполнена ('+(room.game.maxPlayers||4)+' игрока)'});
         const token=crypto.randomBytes(24).toString('hex'),id=crypto.randomBytes(6).toString('hex');room.game.addPlayer(id,data.name);if(!room.host)room.host=id;room.touched=Date.now();sessions.set(token,{room,id,touched:Date.now(),lastInput:Date.now()});broadcast(room);return json(res,200,{token,id,room:code,snapshot:snapshot(room,id)});
       }
