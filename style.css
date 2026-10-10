@@ -202,6 +202,12 @@ body.graphite{--bg:#08090b;--panel:#141518;--line:#2b2d33;--muted:#a0a4ad;--text
 
 /* The selected Graphite HUD: wave above; health, ammunition and wallet below. */
 .graphite.in-menu #hud-details-button{display:none}
+.graphite .coop-connect-note{padding:8px 24px;color:var(--muted);font-size:13px;line-height:1.6}
+.graphite .intro-card[data-menu-view=home]>.coop-connect-note,.graphite .intro-card[data-menu-view=solo]>.coop-connect-note{display:none}
+.graphite details.server-row{display:block;padding:10px 24px}
+.graphite details.server-row>summary{cursor:pointer;color:var(--muted);font-size:12px;padding:4px 0}
+.graphite details.server-row[open]>label,.graphite details.server-row[open]>input,.graphite details.server-row[open]>span{display:block;margin-top:10px}
+.graphite details.server-row>summary:hover{color:var(--text)}
 .graphite .combat-dashboard,.yandex-game .graphite .combat-dashboard{grid-template-columns:1fr;gap:10px}
 .graphite .combat-dashboard .wave-panel{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;padding:12px 16px}
 .graphite .combat-dashboard .wave-panel strong{font-size:16px;margin:0}

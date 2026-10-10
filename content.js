@@ -1,6 +1,7 @@
 (function(root){
   'use strict';
   const VERSION=6;
+  const COOP_SERVER='http://195.19.213.215';
   const WORLD={w:3000,h:2160};
   const OBSTACLES=[{x:310,y:250,w:310,h:180,type:'building'},{x:1460,y:220,w:370,h:200,type:'building'},{x:300,y:1130,w:310,h:290,type:'building'},{x:1690,y:1190,w:340,h:230,type:'building'},{x:830,y:520,w:156,h:84,type:'container'},{x:1450,y:740,w:92,h:210,type:'container'},{x:720,y:930,w:180,h:76,type:'container'},{x:1270,y:1210,w:230,h:84,type:'container'},{x:1820,y:590,w:110,h:110,type:'crates'},{x:1030,y:280,w:110,h:95,type:'crates'},{x:1000,y:1045,w:75,h:75,type:'crates'},{x:1310,y:530,w:85,h:85,type:'crates'},{x:460,y:690,w:120,h:66,type:'barricade'},{x:1960,y:920,w:120,h:66,type:'barricade'},{x:830,y:1430,w:150,h:66,type:'barricade'},
     {x:2330,y:250,w:370,h:260,type:'building'},{x:2420,y:1590,w:330,h:220,type:'building'},{x:460,y:1790,w:290,h:200,type:'building'},{x:1980,y:1810,w:160,h:86,type:'container'},{x:2600,y:1130,w:150,h:86,type:'container'},
@@ -61,5 +62,5 @@
   MODES.normal.description='17 видов, 6 боссов. Адские мутанты и ночные некроманты.';
   MODES.hard.description='19 видов, все 8 боссов. Роботы, адские и усиленные ночные мутанты.';
 
-  const api={TURRETS,BARRICADE_TIERS,VERSION,WORLD,OBSTACLES,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
+  const api={TURRETS,BARRICADE_TIERS,VERSION,COOP_SERVER,WORLD,OBSTACLES,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
 })(typeof window!=='undefined'?window:globalThis);

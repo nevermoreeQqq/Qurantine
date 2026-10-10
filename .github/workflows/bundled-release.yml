@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   desktop:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/vps-deployment'
     strategy:
       fail-fast: false
       matrix:
@@ -52,7 +52,7 @@ jobs:
           path: ${{ matrix.asset }}
           if-no-files-found: error
   game:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/vps-deployment'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -95,6 +95,17 @@ jobs:
           test -f "bundles/Quarantine-${VERSION}-macOS-arm64.dmg"
           test -f "bundles/Quarantine-Game-${VERSION}.qtg"
           test -f "bundles/Quarantine-${VERSION}-YandexGames.zip"
+          if [ "$GITHUB_REF_NAME" = "feature/vps-deployment" ]; then
+            test "$VERSION" = "6.0.6"
+            gh release view "v${VERSION}" >/dev/null
+            mkdir coop
+            cp "bundles/Quarantine-Setup-${VERSION}.exe" "coop/Quarantine-Coop-Setup-${VERSION}.exe"
+            cp "bundles/Quarantine-${VERSION}-macOS-x64.dmg" "coop/Quarantine-Coop-${VERSION}-macOS-x64.dmg"
+            cp "bundles/Quarantine-${VERSION}-macOS-arm64.dmg" "coop/Quarantine-Coop-${VERSION}-macOS-arm64.dmg"
+            (cd coop && sha256sum Quarantine-* > "SHA256-Coop-${VERSION}.txt")
+            gh release upload "v${VERSION}" coop/*
+            exit 0
+          fi
           (cd bundles && sha256sum Quarantine-* > "SHA256-${VERSION}.txt")
           if gh release view "v${VERSION}" >/dev/null 2>&1; then
             echo "Release v${VERSION} already exists; refusing to overwrite it."
