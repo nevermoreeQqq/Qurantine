@@ -1,6 +1,6 @@
 {
   "name": "quarantine-2d",
-  "version": "6.0.3",
+  "version": "6.0.4",
   "private": true,
   "description": "2D survival shooter against mutants",
   "scripts": {
@@ -57,7 +57,8 @@
       "update-public.pem",
       "assets/*.qtu",
       "assets/icon.png",
-      "assets/icon.icns"
+      "assets/icon.icns",
+      "web/**/*"
     ],
     "win": {
       "target": [
@@ -73,7 +74,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Карантин",
+      "shortcutName": "\u041a\u0430\u0440\u0430\u043d\u0442\u0438\u043d",
       "artifactName": "Quarantine-Setup-${version}.exe",
       "installerLanguages": [
         "ru_RU",
@@ -92,7 +93,38 @@
     },
     "dmg": {
       "title": "Quarantine ${version}",
-      "format": "ULFO"
+      "format": "ULFO",
+      "window": {
+        "width": 660,
+        "height": 440
+      },
+      "contents": [
+        {
+          "x": 150,
+          "y": 140,
+          "type": "file"
+        },
+        {
+          "x": 450,
+          "y": 140,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 150,
+          "y": 300,
+          "type": "file",
+          "path": "tools/install-macos.command",
+          "name": "Install-Quarantine.command"
+        },
+        {
+          "x": 450,
+          "y": 300,
+          "type": "file",
+          "path": "tools/Mac-Readme.txt",
+          "name": "READ-ME-FIRST.txt"
+        }
+      ]
     }
   }
 }
