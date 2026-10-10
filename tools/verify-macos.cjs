@@ -25,7 +25,7 @@ console.log('Native macOS '+arch+' application passed.');
 
 // Development-tree launch does not reproduce the first launch of a downloaded DMG.
 const version=require('../package.json').version;
-const dmg=path.resolve(__dirname,'../release',`Quarantine-${version}-macOS-${arch}.dmg`);
+const dmg=process.argv[3]?path.resolve(process.argv[3]):path.resolve(__dirname,'../release',`Quarantine-${version}-macOS-${arch}.dmg`);
 const temp=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'quarantine-dmg-'));
 const mount=path.join(temp,'mounted'),fixture=path.join(temp,'downloaded');
 fs.mkdirSync(mount);fs.mkdirSync(fixture);
