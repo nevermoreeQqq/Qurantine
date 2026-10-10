@@ -25,8 +25,10 @@ jobs:
       - name: Validate archive and script references
         shell: python
         run: |
-          import re, zipfile
-          with zipfile.ZipFile('release/Quarantine-6.0.1-YandexGames.zip') as archive:
+          import json, re, zipfile
+          from pathlib import Path
+          version = json.loads(Path('package.json').read_text())['version']
+          with zipfile.ZipFile(f'release/Quarantine-{version}-YandexGames.zip') as archive:
               assert archive.testzip() is None
               names = archive.namelist()
               assert 'index.html' in names and 'sdk.js' not in names
@@ -39,6 +41,6 @@ jobs:
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: Quarantine-YandexGames
-          path: release/Quarantine-6.0.1-YandexGames.zip
+          path: release/Quarantine-*-YandexGames.zip
           if-no-files-found: error
           retention-days: 30

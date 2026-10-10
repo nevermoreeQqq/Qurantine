@@ -31,3 +31,209 @@
 .match-tools{display:flex;align-items:center;gap:6px;flex-shrink:0;padding:0 2px 6px;font:10px Consolas;min-height:32px;flex-wrap:wrap}.match-tools>button,.match-tools #spectate-controls button{background:#20372f;border:1px solid #5a7965;color:#d7e8c3;border-radius:4px;padding:6px 9px;font:10px Consolas}.match-tools button:disabled{opacity:.45}.match-tools #night-status{margin-left:auto;padding:5px 10px;color:#c1dba8}.match-tools #night-status.night{background:#202a47;color:#c6d5ff;border-radius:4px}.match-tools #spectate-controls{display:flex;align-items:center;gap:8px;color:#b6dceb;font:10px Consolas}.party-selector{display:flex;align-items:center;gap:12px;padding:8px 24px;font:10px Consolas;color:#b8cbb4;border-top:1px solid #3b5141}.party-selector select{background:#213a32;color:#e1f0cb;border:1px solid #708965;padding:6px;font:12px Consolas;border-radius:3px}.party-selector span{color:#849f98;font-size:9px}.build-ring,.selection-ring{width:460px;height:460px;position:relative;border:1px solid #90ab7755;border-radius:50%;background:radial-gradient(circle,#1b382d 18%,#0e1d2570 19%,#244432c9 42%,#13242dbb 43%,#294c3555 68%,#131f2fcc 69%);box-shadow:0 0 80px #0004}.build-center,.selection-center{position:absolute;left:170px;top:170px;width:120px;height:120px;background:#193731;border:1px solid #91b47b;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;color:#e1efcd}.selection-center span{font-size:30px}.selection-center b{font:11px Consolas}.radial-option,.build-option.radial-option{position:absolute;width:108px;height:94px;transform:translate(-50%,-50%);background:linear-gradient(135deg,#2a4641f5,#1d333df5);border:1px solid #658a70;border-radius:10px;color:#e4f1d1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:5px;box-shadow:0 4px 13px #0007}.radial-option:hover,.radial-option.selected{background:#36533f;border-color:#daeda8}.radial-option:disabled{opacity:.38}.radial-option canvas,.build-option.radial-option canvas{width:96px;height:37px;object-fit:contain}.radial-option b,.build-option.radial-option b{font:11px/1.1 'Segoe UI';text-align:center;max-width:98px}.radial-option small,.radial-option span,.build-option.radial-option span{font:8px Consolas;color:#d6d39a}.build-title{top:18px}.build-title h2{font-size:21px}.build-title p{font-size:10px}.build-footer{bottom:16px}.timeout-panel{display:flex;align-items:center;justify-content:center;gap:15px}.timeout-panel button{background:#cbe4ac;border:0;color:#1d3427;border-radius:3px;padding:6px 12px;font:10px Consolas}#selection-wheel,#turret-overlay,#exit-overlay{position:fixed;inset:54px 16px 24px;z-index:31}#exit-overlay{z-index:60}.turret-card{width:470px}.turret-card h2{font-size:26px}.turret-card .text-button{display:block;margin:14px auto;color:#d3e6af}#cancel-exit{font-size:15px}#confirm-exit{color:#e9a99c}.intro-copy h1{font-size:38px;margin:6px 0}.intro-content{padding:12px 26px}.mode-selector{padding:9px 24px}.coop-lobby{padding:9px 24px}.intro-controls{padding:8px 24px}.server-row{padding:8px 24px}.intro-copy .description{margin-bottom:10px}.intro-copy .start-button{padding:12px 22px}.combat-dashboard .utility-strip{display:none}.settings-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);height:min(740px,90vh);max-height:90vh;overflow:hidden;display:flex;flex-direction:column}.settings-card .bindings-grid{overflow:auto;min-height:160px;flex:1}.settings-card .settings-footer,.settings-card .shop-header,.settings-card .audio-settings{flex-shrink:0}
 @media(max-height:790px){.build-ring,.selection-ring{transform:scale(.94)}.build-title{top:12px}.build-footer{bottom:10px}}@media(max-width:1100px){.match-tools{gap:4px}.match-tools>button{font-size:9px;padding:5px 7px}.party-selector span{display:none}.selection-ring,.build-ring{transform:scale(.92)}}
 #settings-overlay,#shop-overlay{position:fixed;inset:54px 16px 24px;z-index:45}.settings-card{position:relative;left:auto;top:auto;transform:none;height:min(740px,100%);max-height:100%;width:min(960px,96%)}
+
+/* Graphite: game interface only. Desktop launcher styles remain independent. */
+body.graphite{--bg:#08090b;--panel:#141518;--line:#2b2d33;--muted:#a0a4ad;--text:#eceef1;--lime:#e6e7e9;--red:#ed7975;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite button{font-weight:400;letter-spacing:0;transition:background .12s,color .12s}
+.graphite button:hover{filter:none;background:#25272d}
+.graphite button:focus-visible,.graphite a:focus-visible,.graphite input:focus-visible,.graphite select:focus-visible{outline:2px solid var(--text);outline-offset:3px}
+.graphite .app{padding:0 20px;min-height:420px}
+.graphite .topbar{height:60px;gap:14px}
+.graphite .brand{font-size:16px;font-weight:500;letter-spacing:2px;gap:0}
+.graphite .brand-icon,.graphite .brand small{display:none}
+.graphite .top-actions{gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.graphite .top-actions button{background:#141518;color:var(--text);border:0;border-radius:6px;height:34px;font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:0 12px}
+.graphite .top-actions button:hover{background:#25272d}
+.graphite #network-status{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite #shop-button,.graphite #gold-number{color:var(--text)}
+.graphite #music-button,.graphite #sound{display:none}
+.graphite .update-button.available{background:var(--text);color:#0b0c0f;animation:none}
+.graphite .game-shell{border:0;background:#0b0c0f;border-radius:8px;min-height:300px;isolation:isolate}
+.graphite .game-shell:after{display:none}
+.graphite .statusbar{height:28px;font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .statusbar>span:nth-child(2),.graphite .statusbar>span:last-child,.graphite .statusbar i{display:none}
+.graphite .statusbar b{color:var(--muted)}
+.graphite .overlay{background:#08090be8;backdrop-filter:none;padding:24px}
+.graphite #overlay{background:#08090b;overflow:auto;align-items:center}
+.graphite.in-menu .combat-dashboard,.graphite.in-menu .combat-bottom,.graphite.in-menu .match-tools{display:none}
+.graphite.in-menu #shop-button,.graphite.in-menu #pause,.graphite.in-menu #settings-button,.graphite.in-menu #network-status{display:none}
+.graphite.in-menu .game-shell>canvas{visibility:hidden}
+.graphite .intro-card{width:min(900px,100%);max-width:900px;max-height:none;background:none;border:0;box-shadow:none;overflow:visible}
+.graphite-home{display:none}
+.graphite .intro-card[data-menu-view=home]>.graphite-home{display:grid;grid-template-columns:1.15fr 1fr;column-gap:72px;row-gap:100px;align-items:center;padding:64px 24px}
+.graphite .intro-card[data-menu-view=home]>:not(.graphite-home){display:none}
+.graphite-title h1{font-size:52px;font-weight:500;letter-spacing:-2px;line-height:1.1;margin:20px 0}
+.graphite-title>p:last-child{font-size:14px;color:var(--muted);margin:0}
+.graphite .kicker{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:2px;color:var(--muted);margin:0 0 12px}
+.graphite-navigation{display:flex;flex-direction:column;gap:12px}
+.graphite .start-button{font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;background:var(--text);color:#0b0c0f;border:0;border-radius:6px;padding:16px 20px;min-height:50px;letter-spacing:0}
+.graphite .start-button:hover{background:#fff}
+.graphite-navigation-button{font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);background:transparent;border:0;border-radius:6px;min-height:50px;padding:16px 20px;text-align:left}
+.graphite-home-footer{grid-column:1/-1;display:flex;justify-content:space-between;gap:18px;color:var(--muted);font-size:11px}
+.graphite .eyebrow{background:none;border:0;height:auto;padding:0 0 24px;gap:24px;font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);letter-spacing:0}
+.graphite .eyebrow .text-button{padding:8px 0;font-size:13px;margin:0;color:var(--muted)}
+.graphite .mode-selector{background:var(--panel);border:0;border-radius:8px;padding:20px 24px;gap:10px}
+.graphite .mode-selector>span{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .mode-selector button{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#22242a;border:0;color:var(--text);border-radius:6px;padding:10px 16px}
+.graphite .mode-selector button[aria-pressed=true]{background:var(--text);color:#0b0c0f}
+.graphite .mode-selector p{font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted);margin-top:6px}
+.graphite .intro-content{display:block;padding:28px 24px}
+.graphite .intro-copy{max-width:460px;margin:auto}
+.graphite .intro-copy h1{font-size:30px;line-height:1.2;font-weight:500;letter-spacing:-.6px;margin:12px 0}
+.graphite .intro-copy .description{font-size:14px;line-height:1.6;color:var(--muted);margin:0 0 24px}
+.graphite .briefing{display:none}
+.graphite .best-line{font:11px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted);letter-spacing:0}
+.graphite .intro-card[data-menu-view=solo]>.server-row,.graphite .intro-card[data-menu-view=solo]>.party-selector,.graphite .intro-card[data-menu-view=solo]>.coop-lobby,.graphite .intro-card[data-menu-view=coop]>.intro-content{display:none}
+.graphite .server-row,.graphite .party-selector,.graphite .coop-lobby{background:none;border:0;padding:18px 24px;color:var(--text);gap:14px}
+.graphite .server-row label,.graphite .party-selector label,.graphite .coop-lobby label{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .server-row input,.graphite .coop-lobby input,.graphite .party-selector select{font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);padding:12px;min-height:44px}
+.graphite .server-row span,.graphite .party-selector span{font:12px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted)}
+.graphite .coop-lobby{grid-template-columns:1fr 1fr;align-items:end}
+.graphite .coop-lobby button{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--text);color:#0b0c0f;border:0;border-radius:6px;height:44px;padding:12px}
+.graphite .intro-controls{border:0;padding:18px 24px;gap:12px;color:var(--muted);font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0}
+.graphite kbd,.graphite .key{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#202227;color:var(--text);border:0;border-radius:3px;padding:4px 6px}
+.graphite .combat-dashboard{position:absolute;top:18px;left:18px;right:18px;display:grid;grid-template-columns:minmax(140px,1fr) 82px 150px;gap:10px;margin:0;padding:0;background:none;border:0;pointer-events:none;z-index:3}
+.graphite .combat-dashboard .hud,.graphite .dashboard-loadout{display:contents;position:static}
+.graphite .combat-dashboard .wave-panel{position:static;transform:none;grid-column:1;grid-row:1;order:1;justify-self:start;width:auto;min-width:130px;padding:12px 16px}
+.graphite .combat-dashboard .score-panel{grid-column:2;grid-row:1;order:2;width:auto;padding:10px;text-align:right;margin:0}
+.graphite .combat-dashboard .map-panel{grid-column:3;grid-row:1;order:3;width:150px;height:84px;grid-template-columns:112px 24px;gap:4px;align-self:start;padding:4px;background:#101114;border:0;border-radius:6px;pointer-events:auto}
+.graphite #minimap{width:112px;height:76px}
+.graphite .map-controls button{background:#25272d;border:0;color:var(--text);font-size:14px;width:24px;height:24px}
+.graphite .map-controls #zoom-value{font-size:9px;color:var(--muted)}
+.graphite .health-panel,.graphite .wave-panel,.graphite .score-panel,.graphite .weapon-panel,.graphite .grenade-panel{background:#101114;border:0;border-radius:6px;backdrop-filter:none;box-shadow:none}
+.graphite .combat-dashboard .wave-panel strong{font:500 22px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);margin:3px 0}
+.graphite .combat-dashboard .wave-panel>span:last-child,.graphite .combat-dashboard .hud-sub{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .combat-dashboard .score-panel strong{display:block;font:500 21px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:4px 0;color:var(--text)}
+.graphite .combat-dashboard .score-panel>span:last-child{font-size:11px;color:var(--muted)}
+.graphite .squad-strip{grid-row:2;grid-column:1/-1;justify-content:start;pointer-events:auto}
+.graphite .team-list:empty{display:none}
+.graphite .team-row{background:#101114;border:0;padding:8px;color:var(--text);font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .team-row b,.graphite .team-armor,.graphite .team-gold{color:var(--text)}
+.graphite #timeout-button{background:#101114;border:0;color:var(--muted);font-size:11px;padding:8px 12px;border-radius:6px}
+.graphite .vote-panel,.graphite .timeout-panel{background:#1c1d22;border-color:var(--line);color:var(--text);font-size:12px}
+.graphite .vote-panel button,.graphite .timeout-panel button{background:var(--text);color:#08090b;border-radius:4px;font-size:12px}
+.graphite .combat-dashboard .boss-panel{grid-row:3;grid-column:1/-1;width:min(520px,100%);justify-self:center;background:#171215;border:0;color:var(--text);border-radius:6px;padding:10px}
+.graphite .boss-track,.graphite .health-track,.graphite .armor-track{height:3px;background:#373a41}
+.graphite #boss-health,.graphite #armor-bar{background:var(--text)}
+.graphite .combat-bottom{position:absolute;left:18px;right:18px;bottom:18px;display:grid;grid-template-columns:180px minmax(200px,1fr) 150px;gap:10px;background:none;border:0;padding:0;margin:0;z-index:3;pointer-events:none}
+.graphite .combat-bottom .health-panel{width:auto;min-width:0;padding:14px 16px;align-self:end}
+.graphite .combat-bottom .hud-label{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;gap:8px}
+.graphite .combat-bottom .hud-label strong{font-size:20px;font-weight:500}
+.graphite .combat-bottom .hud-label small{font-size:11px;color:var(--muted)}
+.graphite .cross{display:none}
+.graphite #health-status{display:none}
+.graphite .armor-panel{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted);padding:8px 0 0;background:none;border:0}
+.graphite .combat-bottom .weapon-panel,.graphite .combat-bottom .grenade-panel{padding:12px 16px;background:#101114;border:0;border-radius:6px;align-self:end}
+.graphite .combat-bottom .weapon-panel{width:min(360px,100%);justify-self:center}
+.graphite .combat-bottom #weapon-icon{width:55px;height:30px}
+.graphite .combat-bottom .weapon-line>span b{font:500 13px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text)}
+.graphite .combat-bottom .weapon-line>span small{display:none}
+.graphite .combat-bottom .ammo{min-width:65px;text-align:right}
+.graphite .combat-bottom .ammo strong{font:500 30px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);text-shadow:none}
+.graphite .combat-bottom .ammo>span{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted)}
+.graphite .ammo b{color:var(--muted)}
+.graphite .combat-bottom .weapon-footer{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted);gap:10px;margin-top:7px}
+.graphite .combat-bottom .grenade-panel>.hud-sub:first-child{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .combat-bottom #grenade-icon{width:30px;height:30px}
+.graphite .combat-bottom .grenade-panel strong{font:500 22px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text)}
+.graphite .combat-bottom .grenade-panel>.hud-sub:last-child{font-size:10px;color:var(--muted)}
+.graphite .tool-summary{position:absolute;left:0;right:0;bottom:calc(100% + 50px);background:#101114;border:0;color:var(--text);font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:10px 14px;border-radius:6px}
+.graphite .tool-summary small{display:none}
+.graphite .match-tools{position:absolute;bottom:116px;left:18px;right:18px;z-index:3;padding:0;min-height:0;gap:5px;font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .match-tools>button,.graphite .match-tools #spectate-controls button{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#101114;border:0;color:var(--muted);padding:8px 10px;border-radius:5px}
+.graphite .match-tools #night-status,.graphite .match-tools #night-status.night{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#101114;color:var(--text);border-radius:5px;padding:8px 10px}
+.graphite .toast{bottom:160px;background:#141518;color:var(--text);border:0;border-radius:6px;font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;padding:12px 16px}
+.graphite .wave-announcement{top:27%;color:var(--text);font:500 28px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:1px}
+.graphite .wave-announcement small{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--text)}
+.graphite .result-card,.graphite .settings-card,.graphite .shop-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 24px 80px #0006}
+.graphite .result-card h2,.graphite .shop-header h2{font-size:28px;line-height:1.2;letter-spacing:-.5px;font-weight:500;color:var(--text)}
+.graphite .result-card p,.graphite .settings-card>p,.graphite .shop-card>p{color:var(--muted);font-size:13px;line-height:1.6}
+.graphite .result-stats strong,.graphite #shop-gold{color:var(--text);font-weight:500}
+.graphite .text-button{color:var(--muted);font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .shop-header>button{background:#22242a;border:0;color:var(--text);border-radius:6px}
+.graphite .shop-tabs{border-color:var(--line)}
+.graphite .shop-tabs button{background:#22242a;border:0;color:var(--muted);font-weight:400;border-radius:6px}
+.graphite .shop-tabs button[aria-selected=true]{background:var(--text);color:#08090b}
+.graphite .shop-section-header h3,.graphite .shop-item h3,.graphite .item-stats{color:var(--text);font-weight:500}
+.graphite .shop-section-header p,.graphite #shop-inventory,.graphite .shop-help,.graphite .shop-item p{color:var(--muted)}
+.graphite .shop-help,.graphite .item-stats{border-color:var(--line)}
+.graphite .shop-item,.graphite .shop-item.equipped{background:#1b1d21;border:1px solid var(--line);border-radius:7px}
+.graphite .shop-item.owned{border-color:#656970}
+.graphite .shop-item.equipped{border-color:var(--text)}
+.graphite .shop-item .shop-picture{background:none}
+.graphite .shop-item button{background:var(--text);color:#08090b;font-weight:500;border-radius:5px}
+.graphite .shop-item button:disabled{background:#303239;color:#a4a7ae}
+.graphite .bindings-grid>label,.graphite .audio-settings{background:#1b1d21;border-color:var(--line);color:var(--text);font-size:12px}
+.graphite .binding-button,.graphite #reset-bindings{background:#292b31;border-color:var(--line);color:var(--text);font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .settings-footer{color:var(--muted);font-size:12px;border-color:var(--line)}
+.graphite input{accent-color:var(--text)}
+.graphite .build-overlay{background:#08090be8;backdrop-filter:none}
+.graphite .build-ring,.graphite .selection-ring{background:#101114;border-color:var(--line);box-shadow:none}
+.graphite .build-center,.graphite .selection-center{background:#191b20;border-color:var(--line);color:var(--text)}
+.graphite .radial-option,.graphite .build-option.radial-option{background:#1d1f24;border-color:var(--line);box-shadow:none;color:var(--text);border-radius:7px}
+.graphite .radial-option:hover,.graphite .radial-option.selected{background:#30333b;border-color:var(--text)}
+.graphite .build-title h2,.graphite .build-title p,.graphite .build-footer,.graphite .radial-option small,.graphite .radial-option span{color:var(--text)}
+.graphite .build-footer button,.graphite .build-center button{background:#22242a;border-color:var(--line);color:var(--text)}
+.graphite .save-note{background:none;border-color:var(--line);color:var(--muted);font-size:12px}
+.yandex-game .graphite .app{padding:0 20px}
+.yandex-game .graphite .topbar{height:60px}
+.yandex-game .graphite .intro-content{padding:28px 24px}
+.yandex-game .graphite.in-menu .game-shell{overflow:auto}
+.yandex-game .graphite .combat-dashboard{grid-template-columns:minmax(140px,1fr) 82px 150px;padding:0}
+.yandex-game .graphite .combat-bottom{grid-template-columns:180px minmax(200px,1fr) 150px;padding:0}
+.yandex-game .graphite .dashboard-loadout{display:contents}
+.yandex-game .graphite .match-tools{padding:0}
+.yandex-game .graphite .tool-summary{display:flex}
+.yandex-game .graphite .platform-loading{background:var(--bg);color:var(--text)}
+.yandex-game .graphite .platform-loading-card strong{color:var(--text);font-weight:500;letter-spacing:2px}
+.yandex-game .graphite .platform-loading-card button{background:var(--text);color:var(--bg);border-radius:6px}
+@media(max-width:900px){.yandex-game .graphite .combat-bottom{grid-template-columns:160px minmax(190px,1fr) 130px}}
+@media(max-width:650px){.yandex-game .graphite .combat-dashboard{grid-template-columns:1fr 66px}.yandex-game .graphite .combat-bottom{grid-template-columns:110px minmax(120px,1fr)}.graphite .tool-summary{bottom:calc(100% + 120px)}.graphite .combat-bottom .hud-label{flex-wrap:wrap}.graphite .combat-bottom .hud-label strong{flex-basis:100%;margin-left:0;font-size:18px}}
+@media(max-width:900px){.graphite .intro-card[data-menu-view=home]>.graphite-home{gap:50px;padding:40px 10px}.graphite-title h1{font-size:42px}.graphite .top-actions #update-button,.graphite .top-actions #launcher-button{display:none}.graphite .combat-bottom{grid-template-columns:160px minmax(190px,1fr) 130px}.graphite .combat-bottom #weapon-icon{display:none}.graphite .match-tools>button{padding:8px;font-size:10px}}
+@media(max-width:650px){.graphite .app,.yandex-game .graphite .app{padding:0 8px;min-height:480px}.graphite .topbar,.yandex-game .graphite .topbar{height:52px}.graphite .top-actions{gap:4px}.graphite .top-actions button{font-size:10px;padding:0 8px}.graphite #network-status{display:none}.graphite .intro-card[data-menu-view=home]>.graphite-home{grid-template-columns:1fr;gap:30px;padding:24px 0}.graphite-home-footer{gap:12px;flex-wrap:wrap}.graphite .overlay{padding:18px}.graphite .mode-selector{padding:16px}.graphite .mode-selector>span{flex-basis:100%}.graphite .mode-selector button{padding:10px 12px}.graphite .intro-content{padding:20px 0}.graphite .intro-copy h1{font-size:26px}.graphite .intro-controls{padding:16px 0}.graphite .server-row,.graphite .party-selector,.graphite .coop-lobby{padding:12px 0}.graphite .party-selector{flex-wrap:wrap}.graphite .combat-dashboard{left:10px;right:10px;top:10px;grid-template-columns:1fr 66px}.graphite .combat-dashboard .map-panel{display:none!important}.graphite .combat-dashboard .wave-panel{min-width:100px;padding:10px}.graphite .combat-bottom{left:10px;right:10px;bottom:10px;grid-template-columns:110px minmax(120px,1fr);gap:6px}.graphite .combat-bottom .health-panel{padding:12px 10px}.graphite .combat-bottom .weapon-panel{padding:12px 10px;width:100%}.graphite .combat-bottom .weapon-line{gap:4px;flex-wrap:wrap}.graphite .combat-bottom .weapon-line>span{min-width:0}.graphite .combat-bottom .ammo{min-width:0}.graphite .combat-bottom .ammo strong{font-size:24px}.graphite .combat-bottom .weapon-footer{flex-wrap:wrap;gap:4px;font-size:10px}.graphite .combat-bottom .grenade-panel{position:absolute;bottom:110px;right:0;width:110px;padding:10px}.graphite .combat-bottom .grenade-panel>.hud-sub:last-child{display:none}.graphite .match-tools{left:10px;right:130px;bottom:125px;gap:4px}.graphite .match-tools #night-status{margin-left:0}.graphite .match-tools>button{font-size:10px;padding:6px 8px}.graphite .tool-summary{font-size:11px}.graphite .wave-announcement{font-size:20px}.graphite .bindings-grid{grid-template-columns:1fr}.graphite .shop-grid{grid-template-columns:1fr}.graphite .settings-card,.graphite .shop-card{width:100%;padding:16px}.graphite .shop-tabs button{font-size:11px;padding:8px}.graphite #settings-overlay,.graphite #shop-overlay{inset:52px 8px 28px}.graphite .toast{bottom:210px;font-size:11px}}
+
+/* The selected Graphite HUD: wave above; health, ammunition and wallet below. */
+.graphite.in-menu #hud-details-button{display:none}
+.graphite .combat-dashboard,.yandex-game .graphite .combat-dashboard{grid-template-columns:1fr;gap:10px}
+.graphite .combat-dashboard .wave-panel{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;padding:12px 16px}
+.graphite .combat-dashboard .wave-panel strong{font-size:16px;margin:0}
+.graphite .squad-strip:has(.team-list:empty):not(:has(.vote-panel:not(.hidden),.timeout-panel:not(.hidden))){display:none}
+.graphite .combat-bottom,.yandex-game .graphite .combat-bottom{grid-template-columns:180px minmax(150px,1fr) 160px;align-items:end}
+.graphite .combat-bottom .health-panel{padding:12px 16px}
+.graphite .combat-bottom .hud-label{font-size:12px;gap:8px}
+.graphite .combat-bottom .hud-label strong{font-size:14px}
+.graphite .combat-bottom .health-track{margin-bottom:0}
+.graphite .combat-bottom .weapon-panel{width:auto;min-width:160px;justify-self:center;padding:12px 16px}
+.graphite .combat-bottom .weapon-line{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.graphite .combat-bottom #weapon-icon,.graphite .combat-bottom .weapon-footer{display:none}
+.graphite .combat-bottom .weapon-line>span b{font-size:12px;font-weight:400}
+.graphite .combat-bottom .ammo{margin:0;min-width:0;display:flex;align-items:baseline;gap:5px;text-align:left}
+.graphite .combat-bottom .ammo strong{font-size:25px;line-height:1.2}
+.graphite .combat-bottom .ammo>span{font-size:12px}
+.graphite .wallet-panel{pointer-events:auto;background:#101114;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:4px;font-size:12px}
+.graphite .wallet-panel>div{display:flex;justify-content:space-between;gap:12px}
+.graphite .wallet-panel #gold-number{font-size:14px;font-weight:500;margin:0;white-space:nowrap}
+.graphite .wallet-panel #shop-button{background:none;border:0;color:var(--muted);padding:0;align-self:flex-start;font-size:12px;text-align:left}
+.graphite .wallet-panel #shop-button:hover{color:var(--text)}
+.graphite .hud-details{position:absolute;top:18px;right:18px;width:300px;max-width:calc(100% - 36px);max-height:calc(100% - 140px);overflow:auto;z-index:4;background:#101114;border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:1fr;gap:12px;font-size:12px}
+.graphite .hud-details .score-panel{position:static;display:flex;align-items:center;justify-content:space-between;gap:10px;width:auto;padding:0;background:none;margin:0;text-align:left}
+.graphite .hud-details .score-panel strong{font:500 16px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;color:var(--text)}
+.graphite .hud-details .score-panel span{font:12px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--muted)}
+.graphite .hud-details #enemy-number{color:var(--muted);font-size:12px}
+.graphite .hud-details .map-panel{position:static;display:grid;grid-template-columns:1fr 24px;gap:8px;padding:0;background:none;border:0}
+.graphite .hud-details #minimap{width:100%;height:116px}
+.graphite .hud-details .grenade-panel{position:static;width:auto;padding:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px;background:none}
+.graphite .hud-details .grenade-panel>div{margin:0}
+.graphite .hud-details .grenade-panel>.hud-sub:first-child{flex-basis:100%}
+.graphite .hud-details .grenade-panel strong{font:500 20px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.graphite .hud-details .grenade-panel .hud-sub{font:11px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:0;color:var(--muted)}
+.graphite .hud-details #grenade-icon{width:28px;height:28px}
+.graphite .hud-details .match-tools{position:static;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}
+.graphite .hud-details .match-tools>button{background:#22242a;font-size:11px;padding:8px}
+.graphite .hud-details .match-tools #night-status{margin-left:0;flex-basis:100%;padding:4px 0}
+.graphite .hud-details #timeout-button{background:#22242a;font-size:11px;justify-self:start}
+.graphite .tool-summary{bottom:calc(100% + 12px)}
+@media(max-width:650px){.graphite .combat-bottom,.yandex-game .graphite .combat-bottom{grid-template-columns:minmax(95px,1fr) minmax(100px,1fr) minmax(95px,1fr);gap:6px}.graphite .combat-bottom .health-panel,.graphite .combat-bottom .weapon-panel,.graphite .wallet-panel{padding:10px;min-width:0}.graphite .combat-bottom .hud-label strong{font-size:14px}.graphite .combat-bottom .weapon-panel{width:auto;justify-self:stretch}.graphite .wallet-panel>div{flex-wrap:wrap;gap:4px}.graphite .wallet-panel #gold-number{flex-basis:100%}.graphite .wallet-panel #shop-button{font-size:11px}.graphite .hud-details{right:10px;top:10px;max-width:calc(100% - 20px)}.graphite .top-actions #hud-details-button{font-size:10px}}
+.graphite .combat-bottom .weapon-panel.reloading .weapon-footer{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.graphite .combat-bottom .weapon-panel.reloading .weapon-footer>span:last-child{display:none}
+.graphite .hud-details .map-panel>div:not(.map-controls){display:none}

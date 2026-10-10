@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101512">
+  <meta name="theme-color" content="#08090b">
   <title>Карантин — 2D Survival</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="graphite in-menu">
   <main class="app">
     <header class="topbar">
       <a class="brand" href="./" aria-label="Карантин"><span class="brand-icon">⌖</span><span>КАРАНТИН<small>ПРОТОКОЛ ВЫЖИВАНИЯ</small></span></a>
@@ -33,9 +33,18 @@
       <div id="wave-announcement" class="wave-announcement"></div>
       <div id="toast" class="toast" role="status"></div>
       <div id="overlay" class="overlay">
-        <div class="intro-card">
-          <div class="eyebrow"><span></span> СВЯЗЬ УСТАНОВЛЕНА <span class="file-number">КОРДОН / NIGHTFALL V6</span></div>
-          <div class="mode-selector" role="group" aria-label="Сложность игры"><span>РЕЖИМ ВЫЖИВАНИЯ</span><button data-difficulty="easy" aria-pressed="false">ЛЁГКИЙ</button><button data-difficulty="normal" aria-pressed="true">СРЕДНИЙ</button><button data-difficulty="hard" aria-pressed="false">СЛОЖНЫЙ</button><p id="mode-description"></p></div><div class="intro-content"><div class="intro-copy"><p class="kicker">ПЕРИМЕТР НАРУШЕН</p><h1>ДОЖИТЬ<br>ДО <em>РАССВЕТА.</em></h1><p class="description">Мутанты уже здесь. Держи дистанцию,<br>собирай припасы и не прекращай огонь.</p><button id="start" class="start-button">НАЧАТЬ ОПЕРАЦИЮ <span>↗</span></button><p class="best-line" id="best-line">КАЖДАЯ ВОЛНА — НОВЫЙ ШАНС ВЫЖИТЬ</p></div><div class="briefing"><div class="danger-symbol">☣</div><div class="briefing-title">ПРАВИЛА ВЫЖИВАНИЯ</div><div class="briefing-row"><span class="pickup-icon ammo-icon">▥</span><p>Патроны<small>Подбирай ящики на карте</small></p><b>5 ТИПОВ</b></div><div class="briefing-row"><span class="pickup-icon nade-icon">◈</span><p>Гранаты<small>Бросай в скопления мутантов</small></p><b>+1</b></div><div class="briefing-row"><span class="pickup-icon med-icon">+</span><p>Аптечки<small>Восстанавливай здоровье</small></p><b>+30</b></div><p class="warning"><span>!</span> Босс каждые 5 волн. Золото — на новое оружие.</p></div></div>
+        <div class="intro-card" data-menu-view="home">
+          <div class="graphite-home">
+            <div class="graphite-title"><p class="kicker">ОПЕРАЦИЯ / ВЫЖИВАНИЕ</p><h1>Карантин</h1><p>Оставайся в живых.</p></div>
+            <nav class="graphite-navigation" aria-label="Главное меню игры">
+              <button id="menu-solo" class="start-button">Одиночная игра <span aria-hidden="true">↗</span></button>
+              <button id="menu-coop" class="graphite-navigation-button">Кооператив</button>
+              <button id="menu-settings" class="graphite-navigation-button">Настройки</button>
+            </nav>
+            <div class="graphite-home-footer"><span>WASD · движение</span><span>Мышь · прицел</span></div>
+          </div>
+          <div class="eyebrow"><button id="menu-back" class="text-button">← Назад</button><span id="menu-section-title">Одиночная игра</span></div>
+          <div class="mode-selector" role="group" aria-label="Сложность игры"><span>РЕЖИМ ВЫЖИВАНИЯ</span><button data-difficulty="easy" aria-pressed="false">ЛЁГКИЙ</button><button data-difficulty="normal" aria-pressed="true">СРЕДНИЙ</button><button data-difficulty="hard" aria-pressed="false">СЛОЖНЫЙ</button><p id="mode-description"></p></div><div class="intro-content"><div class="intro-copy"><p class="kicker">ОДИНОЧНАЯ ОПЕРАЦИЯ</p><h1>Выбери сложность</h1><p class="description">Один боец. Волны мутантов.<br>Снаряжение покупается в бою.</p><button id="start" class="start-button">Начать операцию <span aria-hidden="true">↗</span></button><p class="best-line" id="best-line">КАЖДАЯ ВОЛНА — НОВЫЙ ШАНС ВЫЖИТЬ</p></div><div class="briefing"><div class="danger-symbol">☣</div><div class="briefing-title">ПРАВИЛА ВЫЖИВАНИЯ</div><div class="briefing-row"><span class="pickup-icon ammo-icon">▥</span><p>Патроны<small>Подбирай ящики на карте</small></p><b>5 ТИПОВ</b></div><div class="briefing-row"><span class="pickup-icon nade-icon">◈</span><p>Гранаты<small>Бросай в скопления мутантов</small></p><b>+1</b></div><div class="briefing-row"><span class="pickup-icon med-icon">+</span><p>Аптечки<small>Восстанавливай здоровье</small></p><b>+30</b></div><p class="warning"><span>!</span> Босс каждые 5 волн. Золото — на новое оружие.</p></div></div>
           <div class="server-row"><label for="server-address">АДРЕС СЕРВЕРА ХОЗЯИНА</label><input id="server-address" placeholder="192.168.1.10:5173" autocomplete="off"><span id="server-hint">Для создания комнаты оставь свой сервер. Друг вводит твой адрес в локальной сети или общей VPN.</span></div><div class="party-selector"><label for="party-size">ИГРОКОВ В КООПЕРАТИВЕ</label><select id="party-size"><option value="2">2 бойца</option><option value="3">3 бойца</option><option value="4" selected>4 бойца</option></select><span>Хозяин выбирает размер отряда перед созданием комнаты.</span></div><div class="coop-lobby"><div><label for="player-name">ПОЗЫВНОЙ</label><input id="player-name" maxlength="18" placeholder="Боец" value="Боец"></div><button id="create-room">СОЗДАТЬ КООП · ДО 4</button><div><label for="room-code">КОД КОМНАТЫ</label><input id="room-code" maxlength="6" placeholder="A1B2C3" autocomplete="off"></div><button id="join-room">ВОЙТИ</button><p id="lobby-error" role="status"></p></div>
           <div class="intro-controls"><span><kbd>WASD</kbd> ДВИЖЕНИЕ</span><span><kbd>ЛКМ</kbd> ОГОНЬ</span><span><kbd>G</kbd><kbd>Q</kbd> ГРАНАТЫ</span><span><kbd>T</kbd> СЮРИКЕН</span><span><kbd>B</kbd> МАГАЗИН</span><span><kbd>E</kbd><kbd>F</kbd> СТРОИТЬ</span></div>
         </div>
