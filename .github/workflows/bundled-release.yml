@@ -1,0 +1,102 @@
+name: Publish game with launcher
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bundled-game-release
+  cancel-in-progress: false
+
+jobs:
+  desktop:
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            script: build:win
+            verify: node tools/verify-windows.cjs
+            asset: release/Quarantine-Setup-*.exe
+          - runner: macos-15-intel
+            script: build:mac:intel
+            verify: npm run verify:mac -- x64
+            asset: release/Quarantine-*-macOS-x64.dmg
+          - runner: macos-15
+            script: build:mac:silicon
+            verify: npm run verify:mac -- arm64
+            asset: release/Quarantine-*-macOS-arm64.dmg
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run ${{ matrix.script }} -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: ${{ matrix.verify }}
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: bundled-release-${{ matrix.runner }}
+          path: ${{ matrix.asset }}
+          if-no-files-found: error
+  game:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --omit=dev --ignore-scripts
+      - run: npm test
+      - run: npm run pack:game
+      - run: npm run build:web
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: bundled-release-game
+          path: |
+            release/Quarantine-Game-*.qtg
+            release/Quarantine-Game-*.qtg.sha256
+            release/Quarantine-*-YandexGames.zip
+          if-no-files-found: error
+  publish:
+    needs: [desktop, game]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: bundled-release-*
+          merge-multiple: true
+          path: bundles
+      - name: Publish installers and the game at the same version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$(node -p 'require("./package.json").version')"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test -f "CHANGELOG-${VERSION}.md"
+          test -f "bundles/Quarantine-Setup-${VERSION}.exe"
+          test -f "bundles/Quarantine-${VERSION}-macOS-x64.dmg"
+          test -f "bundles/Quarantine-${VERSION}-macOS-arm64.dmg"
+          test -f "bundles/Quarantine-Game-${VERSION}.qtg"
+          test -f "bundles/Quarantine-${VERSION}-YandexGames.zip"
+          (cd bundles && sha256sum Quarantine-* > "SHA256-${VERSION}.txt")
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "Release v${VERSION} already exists; refusing to overwrite it."
+            exit 1
+          fi
+          gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Карантин ${VERSION} — новый лаунчер" --notes-file "CHANGELOG-${VERSION}.md" --draft --latest=false
+          gh release upload "v${VERSION}" bundles/*
+          gh release edit "v${VERSION}" --draft=false --latest=true
