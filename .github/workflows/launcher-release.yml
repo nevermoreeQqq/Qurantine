@@ -23,11 +23,11 @@ jobs:
             asset: release/Quarantine-Launcher-Setup.exe
           - runner: macos-15-intel
             script: build:launcher:mac:intel
-            verify: npm run verify:mac -- x64
+            verify: npm run verify:mac -- x64 release/Quarantine-Launcher-macOS-x64.dmg
             asset: release/Quarantine-Launcher-macOS-x64.dmg
           - runner: macos-15
             script: build:launcher:mac:silicon
-            verify: npm run verify:mac -- arm64
+            verify: npm run verify:mac -- arm64 release/Quarantine-Launcher-macOS-arm64.dmg
             asset: release/Quarantine-Launcher-macOS-arm64.dmg
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
