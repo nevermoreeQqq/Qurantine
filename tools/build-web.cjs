@@ -20,7 +20,8 @@ function build(destination=output){
   const entries=[['index.html',Buffer.from(html)],...files.map(name=>[name,fs.readFileSync(path.join(root,name))])];
   const size=entries.reduce((sum,[,bytes])=>sum+bytes.length,0);if(size>100*1024*1024)throw Error('Web build exceeds 100 MB');
   fs.mkdirSync(destination,{recursive:true});for(const [name,bytes]of entries){const target=path.join(destination,name);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,bytes);}
-  const archive=path.join(path.dirname(destination),'Quarantine-6.0.1-YandexGames.zip');fs.writeFileSync(archive,zip(entries));
+  const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;
+  const archive=path.join(path.dirname(destination),'Quarantine-'+version+'-YandexGames.zip');fs.writeFileSync(archive,zip(entries));
   return{directory:destination,archive,files:entries.length,uncompressedBytes:size,compressedBytes:fs.statSync(archive).size};
 }
 if(require.main===module)console.log(JSON.stringify(build(),null,2));
