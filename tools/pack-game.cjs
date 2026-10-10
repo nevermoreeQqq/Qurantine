@@ -1,0 +1,12 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { packGame } = require('../desktop/game-package.cjs');
+const args = process.argv.slice(2);
+const arg = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
+const root = path.resolve(arg('--source', path.join(__dirname, '..')));
+const archive = packGame(root);
+const output = path.resolve(arg('--output', path.join(root, `release/Quarantine-Game-${archive.version}.qtg`)));
+fs.mkdirSync(path.dirname(output), { recursive: true });
+fs.writeFileSync(output, archive.buffer);
+fs.writeFileSync(output + '.sha256', `${archive.sha256}  ${path.basename(output)}\n`);
+console.log(`Game ${archive.version}: ${output} (${archive.buffer.length} bytes)`);

@@ -6,8 +6,17 @@ contextBridge.exposeInMainWorld('quarantineDesktop',{
   play:()=>ipcRenderer.invoke('launcher:play'),
   importUpdate:()=>ipcRenderer.invoke('update:import'),
   installVersion:version=>ipcRenderer.invoke('launcher:install',version),
+  settings:()=>ipcRenderer.invoke('launcher:settings'),
+  saveSettings:value=>ipcRenderer.invoke('launcher:save-settings',value),
+  newsVideo:version=>ipcRenderer.invoke('launcher:news-video',version),
   progress:callback=>{const listener=(_,value)=>callback(value);ipcRenderer.on('update:progress',listener);return()=>ipcRenderer.removeListener('update:progress',listener);}
 });
+if(/^https?:$/.test(location.protocol)){
+  const preferences=ipcRenderer.sendSync('launcher:settings-sync');
+  if(typeof preferences.gameMusic==='boolean'){
+    try{localStorage.setItem('quarantine-audio-v3',JSON.stringify({music:preferences.gameMusic,effects:preferences.gameEffects,volume:preferences.gameMusicVolume/100}));}catch{}
+  }
+}
 window.addEventListener('DOMContentLoaded',async()=>{
   if(!/^https?:$/.test(location.protocol)||document.querySelector('#update-button'))return;
   // The launcher still offers updates when an older game version is selected.
