@@ -100,7 +100,7 @@ jobs:
             echo "Release v${VERSION} already exists; refusing to overwrite it."
             exit 1
           fi
-          gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Карантин ${VERSION} — исправление запуска" --notes-file "CHANGELOG-${VERSION}.md" --draft --latest=false
+          gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Карантин ${VERSION}" --notes-file "CHANGELOG-${VERSION}.md" --draft --latest=false
           gh release upload "v${VERSION}" bundles/*
           gh release edit "v${VERSION}" --draft=false --latest=true
 

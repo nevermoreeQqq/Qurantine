@@ -160,7 +160,15 @@ body.graphite{--bg:#08090b;--panel:#141518;--line:#2b2d33;--muted:#a0a4ad;--text
 .graphite .shop-item,.graphite .shop-item.equipped{background:#1b1d21;border:1px solid var(--line);border-radius:7px}
 .graphite .shop-item.owned{border-color:#656970}
 .graphite .shop-item.equipped{border-color:var(--text)}
-.graphite .shop-item .shop-picture{background:none}
+.graphite .shop-item .shop-picture{background:none;image-rendering:auto}
+.shop-tabs button{display:inline-flex;align-items:center;gap:8px}
+.shop-category-icon{width:20px;height:20px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bindings-search{display:flex;align-items:center;gap:12px;margin:12px 0 4px;flex-shrink:0;color:var(--text);font-size:12px}
+.bindings-search input{flex:1;min-width:0;background:#1b1d21;border:1px solid var(--line);border-radius:6px;color:var(--text);font:inherit;padding:10px 12px}
+.bindings-search input::placeholder{color:var(--muted)}
+.bindings-search input:focus{outline:2px solid #9aa2ad;outline-offset:2px}
+.binding-search-count{font-size:11px;color:var(--muted);min-height:16px;flex-shrink:0}
+.bindings-empty{grid-column:1/-1;color:var(--muted);font-size:13px;padding:16px 0}
 .graphite .shop-item button{background:var(--text);color:#08090b;font-weight:500;border-radius:5px}
 .graphite .shop-item button:disabled{background:#303239;color:#a4a7ae}
 .graphite .bindings-grid>label,.graphite .audio-settings{background:#1b1d21;border-color:var(--line);color:var(--text);font-size:12px}
