@@ -5,7 +5,7 @@ const crypto=require('node:crypto');
 const {WebSocketServer,WebSocket}=require('ws');
 const {Simulation}=require('./simulation.js');
 const {VERSION}=require('./content.js');
-const root=__dirname,mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png'};
+const root=__dirname,mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webm':'video/webm'};
 function createGameServer(options={}){
   const newSimulation=options.simulationFactory||(opts=>new Simulation(Math.random,opts));
   const updateHandler=options.updateHandler||serveUpdates;
@@ -56,7 +56,7 @@ function createGameServer(options={}){
       }
       if(req.method!=='GET')return json(res,405,{error:'Method not allowed'});
       let pathname;try{pathname=decodeURIComponent(url.pathname);}catch{return json(res,400,{error:'Bad path'});}const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));const allowed=new Set(['index.html','style.css','game.js','core.js','content.js','controls.js','music.js','render.js','simulation.js','terrain.js','netcode.js','preview.jpg']);
-      for(const f of ['desktop/launcher.html','desktop/launcher.js','desktop/launcher.css'])allowed.add(path.normalize(f));
+      for(const f of ['desktop/launcher.html','desktop/launcher.js','desktop/launcher.css','desktop/launcher-music.js','desktop/media/cordon.svg','desktop/media/collision-poster.svg','desktop/media/collision-6.0.1.webm'])allowed.add(path.normalize(f));
       if(!file.startsWith(root+path.sep)||!allowed.has(path.relative(root,file)))return json(res,404,{error:'Not found'});
       fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);});
     }catch(error){if(!res.headersSent)json(res,400,{error:error.message});else res.end();}

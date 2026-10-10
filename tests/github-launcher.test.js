@@ -6,6 +6,8 @@ const { packGame, readGame, digest } = require('../desktop/game-package.cjs');
 const { createUpdater } = require('../desktop/updater.cjs');
 const { normalize, createSettings } = require('../desktop/settings.cjs');
 const root = path.join(__dirname, '..');
+const baseVersion = require('../package.json').version;
+const nextVersion = baseVersion.replace(/(\d+)$/, patch => Number(patch) + 1);
 function fixture(t) {
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'quarantine-github-'));
   t.after(() => { if (!path.resolve(temp).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw Error('Unsafe cleanup'); fs.rmSync(temp, { recursive: true, force: true }); });
@@ -85,26 +87,26 @@ test('Even with a matching digest, game packages cannot write outside the game f
   }
 });
 test('A GitHub game installs, survives restart, repairs damaged runtime files, rolls back and updates without changing launcher files', async t => {
-  const temp = fixture(t), archive = gamePackage(), before = fs.readFileSync(path.join(root, 'desktop/main.cjs'));
-  const releaseSource = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: '6.0.2', protocol: 6, notes: 'Collision fixes', remote: true }], news: [] }), download: async () => ({ buffer: archive.buffer, format: 2, digest: 'sha256:' + archive.sha256 }) };
+  const temp = fixture(t), archive = gamePackage(nextVersion), before = fs.readFileSync(path.join(root, 'desktop/main.cjs'));
+  const releaseSource = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: 6, notes: 'Collision fixes', remote: true }], news: [] }), download: async () => ({ buffer: archive.buffer, format: 2, digest: 'sha256:' + archive.sha256 }) };
   const config = args(temp, releaseSource), updater = createUpdater(config);
-  const state = await updater.refresh('http://old-peer-address:5173'); assert.equal(state.source, 'github'); assert.equal(state.latest, '6.0.2');
-  await updater.install('6.0.2');
-  const reopened = createUpdater(config); assert.equal(reopened.current(), '6.0.2'); assert.ok(fs.existsSync(path.join(reopened.runtimeRoot, 'web/platform.js')));
+  const state = await updater.refresh('http://old-peer-address:5173'); assert.equal(state.source, 'github'); assert.equal(state.latest, nextVersion);
+  await updater.install(nextVersion);
+  const reopened = createUpdater(config); assert.equal(reopened.current(), nextVersion); assert.ok(fs.existsSync(path.join(reopened.runtimeRoot, 'web/platform.js')));
   fs.writeFileSync(path.join(reopened.runtimeRoot, 'game.js'), 'damaged');
   const repaired = createUpdater(config); assert.notEqual(fs.readFileSync(path.join(repaired.runtimeRoot, 'game.js'), 'utf8'), 'damaged');
-  const baseVersion = require('../package.json').version; await repaired.install(baseVersion, () => {}, true); assert.equal(createUpdater(config).current(), baseVersion);
-  const rolledBack = createUpdater(config); await rolledBack.install('6.0.2'); assert.equal(createUpdater(config).current(), '6.0.2');
+  await repaired.install(baseVersion, () => {}, true); assert.equal(createUpdater(config).current(), baseVersion);
+  const rolledBack = createUpdater(config); await rolledBack.install(nextVersion); assert.equal(createUpdater(config).current(), nextVersion);
   assert.deepEqual(fs.readFileSync(path.join(root, 'desktop/main.cjs')), before);
 });
 test('A corrupt GitHub download never changes the active version and untrusted local packages are not auto-imported', async t => {
-  const temp = fixture(t), archive = gamePackage();
-  const source = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: '6.0.2', protocol: 6 }], news: [] }), download: async () => ({ buffer: Buffer.from('bad'), format: 2, digest: archive.sha256 }) };
+  const temp = fixture(t), archive = gamePackage(nextVersion);
+  const source = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: 6 }], news: [] }), download: async () => ({ buffer: Buffer.from('bad'), format: 2, digest: archive.sha256 }) };
   const config = args(temp, source), updater = createUpdater(config);
-  await assert.rejects(updater.install('6.0.2'), /сумма/);
+  await assert.rejects(updater.install(nextVersion), /сумма/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(config.dataRoot, 'launcher.json'))).active, null);
-  fs.writeFileSync(path.join(config.dataRoot, 'archives/Quarantine-Game-6.0.2.qtg'), archive.buffer);
-  const offline = createUpdater({ ...config, releaseSource: undefined }); assert.ok(!(await offline.refresh()).versions.some(v => v.version === '6.0.2'));
+  fs.writeFileSync(path.join(config.dataRoot, `archives/Quarantine-Game-${nextVersion}.qtg`), archive.buffer);
+  const offline = createUpdater({ ...config, releaseSource: undefined }); assert.ok(!(await offline.refresh()).versions.some(v => v.version === nextVersion));
 });
 test('GitHub being offline leaves the bundled version playable and local versions selectable', async t => {
   const config = args(fixture(t), { repository: REPOSITORY, catalog: async () => { throw Error('Offline'); } });
