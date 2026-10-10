@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   launcher:
+    if: github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +62,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          (cd launcher && sha256sum Quarantine-* > SHA256-launcher.txt)
           if ! gh release view launcher-v1.0.0 >/dev/null 2>&1; then
-            gh release create launcher-v1.0.0 --target "$GITHUB_SHA" --title "Карантин — Лаунчер" --notes "Установите один раз. Новые версии игры скачиваются внутри лаунчера." --latest=false
+            gh release create launcher-v1.0.0 --target "$GITHUB_SHA" --title "Карантин — Лаунчер" --notes-file docs/launcher-release-notes.md --draft --latest=false
           fi
           gh release upload launcher-v1.0.0 launcher/* --clobber
+          gh release edit launcher-v1.0.0 --draft=false --latest=false --notes-file docs/launcher-release-notes.md
