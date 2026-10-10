@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const crypto=require('node:crypto');
 const {WebSocketServer,WebSocket}=require('ws');
-const {Simulation}=require('./simulation.js');
+const {Simulation,MODES}=require('./simulation.js');
 const {VERSION}=require('./content.js');
 const root=__dirname,mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.jpg':'image/jpeg','.png':'image/png','.svg':'image/svg+xml','.webm':'video/webm'};
 function createGameServer(options={}){
@@ -17,7 +17,7 @@ function createGameServer(options={}){
   const rooms=new Map(),sessions=new Map(),sockets=new WebSocketServer({noServer:true,maxPayload:16384,perMessageDeflate:{threshold:2048,serverNoContextTakeover:true,clientNoContextTakeover:true,concurrencyLimit:4,zlibDeflateOptions:{level:3}}});
   const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   const body=req=>new Promise((resolve,reject)=>{let text='';req.on('data',c=>{text+=c;if(text.length>8192){reject(Error('Слишком большой запрос'));req.destroy();}});req.on('end',()=>{try{resolve(JSON.parse(text||'{}'));}catch{reject(Error('Неверный JSON'));}});req.on('error',reject);});
-  const snapshot=(room,viewerId)=>({...room.game.snapshot(viewerId),room:room.code,host:room.host,round:room.round,serverTime:room.clock});
+  const snapshot=(room,viewerId)=>({...room.game.snapshot(viewerId),room:room.code,host:room.host,round:room.round,serverTime:room.clock,features:['team-chat','lobby-difficulty'],chat:room.chat});
   const broadcast=room=>{
     if(!room.streams.size&&!room.sockets.size)return;
     const state=snapshot(room);
@@ -33,7 +33,22 @@ function createGameServer(options={}){
     if(room.streams.size){for(const [viewerId,res] of room.streams)if(!res.writableEnded&&!res.destroyed){if(res.writableLength>256000)res.destroy();else res.write(`data: ${JSON.stringify({...state,mines:room.game.snapshot(viewerId).mines})}\n\n`);}}
   };
   function action(session,data){const {room,id}=session;
-    if(data.type==='launch'){if(room.host!==id)return{status:403,error:'Начать бой может хозяин комнаты'};room.game.start();}
+    if(data.type==='chat'){
+      if(typeof data.item!=='string')return{status:400,error:'Введи сообщение'};
+      const text=Array.from(data.item.replace(/[\u0000-\u001f\u007f-\u009f]/g,' ').replace(/\s+/g,' ').trim()).slice(0,240).join('');
+      if(!text)return{status:400,error:'Введи сообщение'};
+      const now=Date.now();if(now-(session.lastChatAt||0)<750)return{status:429,error:'Подожди секунду перед следующим сообщением'};
+      const player=room.game.players.find(p=>p.id===id);if(!player)return{status:401,error:'Ты больше не в команде'};
+      session.lastChatAt=now;room.chat.push({id:++room.chatId,playerId:id,name:player.name,text});
+      if(room.chat.length>40)room.chat.splice(0,room.chat.length-40);
+    }
+    else if(data.type==='difficulty'){
+      if(room.host!==id)return{status:403,error:'Сложность выбирает хозяин команды'};
+      if(room.game.state!=='waiting')return{status:409,error:'Сложность можно менять только до начала боя'};
+      if(!Object.hasOwn(MODES,data.item))return{status:400,error:'Неизвестная сложность'};
+      room.game.setDifficulty(data.item);
+    }
+    else if(data.type==='launch'){if(room.host!==id)return{status:403,error:'Начать бой может хозяин комнаты'};room.game.start();}
     else if(data.type==='restart'){if(room.host!==id)return{status:403,error:'Перезапуск доступен хозяину комнаты'};if(room.game.state!=='over')return{status:409,error:'Перезапуск доступен после завершения матча'};const roster=room.game.players;room.game=newSimulation({difficulty:room.game.difficulty,maxPlayers:room.game.maxPlayers});room.round++;for(const p of roster){room.game.addPlayer(p.id,p.name);if(room.sockets.has(p.id))room.game.networkPlayer(p.id);}for(const ws of room.sockets.values())ws.eventAck=0;room.game.start();}
     else return{ok:room.game.action(id,data.type,data.item,data.angle)};
     return{ok:true};
@@ -47,7 +62,7 @@ function createGameServer(options={}){
       if(url.pathname==='/api/join'&&req.method==='POST'){
         const data=await body(req);if(data.version!==undefined&&data.version!==VERSION)return json(res,409,{error:'Версии игры отличаются. Обновите приложение на обоих компьютерах.'});let code=String(data.room||'').trim().toUpperCase(),room;
         if(code){room=rooms.get(code);if(!room)return json(res,404,{error:'Комната не найдена. Проверь код.'});if(room.game.state==='over')return json(res,409,{error:'Матч завершён. Хозяин должен начать заново.'});}
-        else{if(rooms.size>=roomLimit)return json(res,503,{error:'Сервер занят'});do{code=crypto.randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));room={code,game:newSimulation({difficulty:data.difficulty,maxPlayers:data.maxPlayers}),streams:new Map(),sockets:new Map(),clock:0,round:1,host:null,touched:Date.now()};rooms.set(code,room);}
+        else{if(rooms.size>=roomLimit)return json(res,503,{error:'Сервер занят'});do{code=crypto.randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));room={code,game:newSimulation({difficulty:data.difficulty,maxPlayers:data.maxPlayers}),streams:new Map(),sockets:new Map(),clock:0,round:1,host:null,chat:[],chatId:0,touched:Date.now()};rooms.set(code,room);}
         if(room.game.players.length>=(room.game.maxPlayers||4))return json(res,409,{error:'Комната заполнена ('+(room.game.maxPlayers||4)+' игрока)'});
         const token=crypto.randomBytes(24).toString('hex'),id=crypto.randomBytes(6).toString('hex');room.game.addPlayer(id,data.name);if(!room.host)room.host=id;room.touched=Date.now();sessions.set(token,{room,id,touched:Date.now(),lastInput:Date.now()});broadcast(room);return json(res,200,{token,id,room:code,snapshot:snapshot(room,id)});
       }
@@ -78,7 +93,7 @@ function createGameServer(options={}){
         if(Number.isSafeInteger(data.eventAck))ws.eventAck=Math.max(ws.eventAck,Math.min(data.eventAck,room.game.eventId));
         if(data.type==='input'){room.game.queueInput(id,data.frames);session.lastInput=Date.now();}
         else if(data.type==='ping')ws.send(JSON.stringify({type:'pong',clientTime:data.clientTime}));
-        else if(data.type==='action'){const result=action(session,{...data,type:data.action});ws.send(JSON.stringify({type:'result',...result}));}
+        else if(data.type==='action'){const result=action(session,{...data,type:data.action});ws.send(JSON.stringify({type:'result',action:data.action,...result}));if(result.ok&&['chat','difficulty','launch','restart'].includes(data.action))broadcast(room);}
       });
       ws.on('close',()=>{if(room.sockets.get(id)===ws){room.sockets.delete(id);const p=room.game.players.find(p=>p.id===id);if(p)p.commands=[];room.game.input(id,{});}});broadcast(room);
     });
