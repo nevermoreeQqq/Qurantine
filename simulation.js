@@ -107,6 +107,7 @@
       if(!this.valid(p.x,p.y,p.r)){const safe=this.spot(1200,900,60,180,p.r);p.x=safe.x;p.y=safe.y;}this.players.push(p);this.event('joined',{name:p.name});return p;
     }
     removePlayer(id){this.players=this.players.filter(p=>p.id!==id);if(this.vote){this.vote.yes=this.vote.yes.filter(p=>p!==id);this.vote.no=this.vote.no.filter(p=>p!==id);}this.event('left',{player:id});}
+    setDifficulty(value){if(this.state!=='waiting'||!Object.hasOwn(MODES,value))return false;this.difficulty=value;this.bossPool=BOSSES.filter(b=>MODES[value].bosses.includes(b.ability));return true;}
     start(){if(this.state==='waiting'&&this.players.length){this.state='playing';this.nextWave();}}
     input(id,input){const p=this.players.find(p=>p.id===id);if(!p)return;p.input={dx:Number.isFinite(input.dx)?clamp(input.dx,-1,1):0,dy:Number.isFinite(input.dy)?clamp(input.dy,-1,1):0,angle:Number.isFinite(input.angle)?input.angle:0,shoot:input.shoot===true,repair:input.repair===true,sprint:input.sprint===true};}
     networkPlayer(id){const p=this.players.find(p=>p.id===id);if(p){p.commands=[];p.ack=0;p.queued=0;p.budget=0;}}
