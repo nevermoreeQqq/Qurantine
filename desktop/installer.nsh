@@ -1,4 +1,5 @@
 ; Keep the application identity and user-data folder on every upgrade.
+!include "${PROJECT_DIR}\desktop\installer-dark.nsh"
 !macro customWelcomePage
   !define MUI_WELCOMEPAGE_TITLE "Установка Карантина"
   !define MUI_WELCOMEPAGE_TEXT "Игра и постоянный лаунчер.$\r$\n$\r$\n• Кооператив до четырёх бойцов.$\r$\n• Обновления игры в лаунчере.$\r$\n• Настройки сохраняются.$\r$\n$\r$\nДалее: папка установки и ярлыки."
@@ -34,6 +35,7 @@
     ${NSD_SetState} $startShortcutCheckbox ${BST_CHECKED}
     ${NSD_CreateLabel} 0 108u 100% 40u "Ваши настройки и загруженные версии игры сохранятся. Для обновления самой игры используйте лаунчер."
     Pop $0
+    Call QuarantineDarkScan
     nsDialogs::Show
   FunctionEnd
   Function QuarantineShortcutsLeave
@@ -51,5 +53,7 @@
       ${EndIf}
       StrCpy $launchLink "$appExe"
     ${EndIf}
+    ; Refresh Explorer's application/shortcut icons after replacing the executable.
+    System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
   !macroend
 !endif
