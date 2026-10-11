@@ -3,12 +3,14 @@ const path=require('node:path'),fs=require('node:fs');
 const {createUpdater}=require('./updater.cjs');
 const {createGitHubReleases}=require('./github-releases.cjs');
 const {createSettings}=require('./settings.cjs');
+const {createGameSettings}=require('./game-settings.cjs');
 const {isTrustedNavigation}=require('./navigation.cjs');
 app.setName('Quarantine');
 let server,window,updater,address,busy=false;
 const cycleTest=process.argv.includes('--smoke-update-cycle'),cycleStage=Number(process.argv.find(a=>a.startsWith('--smoke-cycle='))?.split('=')[1]||0);
 if(cycleTest||process.argv.includes('--smoke-test')||process.argv.includes('--launcher-review')){const smokeData=path.join(require('node:os').tmpdir(),cycleTest?'quarantine-bootstrap-cycle-v6':process.argv.includes('--launcher-review')?'quarantine-launcher-review':'quarantine-bootstrap-smoke-v6');fs.mkdirSync(smokeData,{recursive:true});app.setPath('userData',smokeData);}
 const launcherSettings=createSettings(app.getPath('userData'));
+const gameSettings=createGameSettings(app.getPath('userData'));
 app.commandLine.appendSwitch('js-flags','--max-old-space-size='+launcherSettings.get().memoryMB);
 if(!app.requestSingleInstanceLock())app.quit();
 else{
@@ -37,7 +39,23 @@ else{
     const handle=(name,fn)=>ipcMain.handle(name,async(event,...args)=>{if(!trusted(event.senderFrame.url))throw Error('Недопустимый источник');return fn(...args);});
     handle('update:check',source=>updater.refresh(source));
     handle('launcher:settings',()=>launcherSettings.get());
-    handle('launcher:save-settings',value=>launcherSettings.save(value));
+    handle('launcher:save-settings',value=>{
+      const settings=launcherSettings.save(value);
+      const audio=gameSettings.get()['quarantine-audio-v3']||{};
+      gameSettings.save('quarantine-audio-v3',{...audio,music:settings.gameMusic,effects:settings.gameEffects,volume:settings.gameMusicVolume/100});
+      return settings;
+    });
+    handle('game:save-settings',(key,value)=>{
+      const state=gameSettings.save(key,value);
+      if(key==='quarantine-audio-v3'){const audio=state[key];launcherSettings.save({gameMusic:audio.music,gameEffects:audio.effects,gameMusicVolume:audio.volume*100});}
+      return state;
+    });
+    handle('game:fullscreen',value=>{if(typeof value!=='boolean')throw Error('Неверный режим экрана');gameSettings.save('quarantine-display-v1',{fullscreen:value});window.setFullScreen(value);return value;});
+    ipcMain.on('game:settings-sync',event=>{event.returnValue=trusted(event.senderFrame.url)?gameSettings.get():{};});
+    ipcMain.on('game:import-settings',(event,key,value)=>{event.returnValue=false;if(!trusted(event.senderFrame.url))return;try{if(gameSettings.get()[key]===undefined)gameSettings.save(key,value);event.returnValue=true;}catch{}});
+    const fullscreenChanged=value=>{gameSettings.save('quarantine-display-v1',{fullscreen:value});window.webContents.send('game:fullscreen-changed',value);};
+    window.on('enter-full-screen',()=>fullscreenChanged(true));window.on('leave-full-screen',()=>fullscreenChanged(false));
+    if(gameSettings.get()['quarantine-display-v1']?.fullscreen)window.setFullScreen(true);
     handle('launcher:news-video',async version=>{
       if(!/^\d+\.\d+\.\d+$/.test(String(version))||!releaseSource)throw Error('Видео новости недоступно');
       const entry=(await releaseSource.catalog()).news.find(n=>n.version===version)?.video;if(!entry)throw Error('Видео новости недоступно');
@@ -50,7 +68,7 @@ else{
     async function install(version,choose){if(busy)throw Error('Обновление уже устанавливается');busy=true;try{const result=await updater.install(version,value=>window?.webContents.send('update:progress',value),choose);setTimeout(()=>{if(cycleTest)app.relaunch({args:process.argv.slice(1).filter(a=>!a.startsWith('--smoke-cycle=')).concat('--smoke-cycle='+(cycleStage+1))});else app.relaunch();app.quit();},700);return result;}finally{busy=false;}}
     handle('update:install',version=>install(version,false));handle('launcher:install',version=>install(version,true));
     handle('launcher:show',()=>window.loadFile(launcherFile));
-    handle('launcher:play',()=>window.loadURL(address+'/?desktop=1'));
+    handle('launcher:play',()=>{if(gameSettings.get()['quarantine-display-v1']?.fullscreen)window.setFullScreen(true);return window.loadURL(address+'/?desktop=1');});
     handle('update:import',async()=>{const selection=await dialog.showOpenDialog(window,{title:'Добавить обновление Карантина',properties:['openFile'],filters:[{name:'Обновление Карантина',extensions:['qtu']}]});if(selection.canceled)return null;return updater.importFile(selection.filePaths[0]);});
     if(cycleTest){
       await window.loadFile(launcherFile);const versions=await window.webContents.executeJavaScript('window.quarantineDesktop.checkUpdates()');

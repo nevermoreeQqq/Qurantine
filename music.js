@@ -61,7 +61,7 @@
       source.connect(filter);filter.connect(gain);if(pan){pan.pan.value=local?0:Math.max(-.85,Math.min(.85,dx/600));gain.connect(pan);pan.connect(bus);}else gain.connect(bus);
       const v={source,local,nodes:[source,filter,gain,...(pan?[pan]:[])]};voices.add(v);source.onended=()=>release(v);source.start();return true;
     }
-    return{play,stopAll,setEnabled(value){enabled=!!value;if(!enabled)stopAll();},warm(){for(const key of Object.keys(profiles))buffer(key,0);}};
+    return{play,stopAll,setVolume(value){bus.gain.value=.5*Math.max(0,Math.min(1,value));},setEnabled(value){enabled=!!value;if(!enabled)stopAll();},warm(){for(const key of Object.keys(profiles))buffer(key,0);}};
   }
   const sources=Object.fromEntries(Object.entries(recordings).map(([key,r])=>[key,r.source]));
   const api={profiles,samples,create,sources};root.QuarantineSFX=api;if(typeof module==='object'&&module.exports)module.exports=api;
