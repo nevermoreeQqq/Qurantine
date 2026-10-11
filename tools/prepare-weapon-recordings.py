@@ -16,12 +16,12 @@ from scipy.signal import butter, sosfilt, resample_poly
 # Different original recordings, rather than one noise patch with varied pitch.
 CONFIG = {
     'pistol': ('Walther PPQ/X_39P.wav', .20, 7800, 1),
-    'ak': ('AK-47/C_28P.wav', .25, 8200, 1),
+    'ak': ('AK-47/C_34P.wav', .25, 6200, 1),
     'smg': ('Carl Gustav M45/G_31P.wav', .15, 8500, 1.04),
     'dmr': ('AR-15/D_32P.wav', .30, 7900, .94),
     'rifle': ('Tikka/W_24P.wav', .44, 7200, .86),
-    'shotgun': ('Mossberg/N_30P.wav', .38, 7600, 1),
-    'superShotgun': ('Nova/O_21P.wav', .45, 7000, .88),
+    'shotgun': ('Mossberg/N_26P.wav', .38, 5700, 1),
+    'superShotgun': ('Nova/O_17P.wav', .45, 5200, .96),
     'hmg': ('Mosin Nagant/M_21P.wav', .24, 7800, .9),
 }
 RATE = 24000
@@ -46,15 +46,16 @@ def prepare(root):
         low = sosfilt(butter(2, 400, 'lowpass', fs=rate, output='sos'), values)
         mid = sosfilt(butter(2, 1600, 'lowpass', fs=rate, output='sos'), values) - low
         high = values - low - mid
-        values = low * .72 + mid + high * 1.5
+        revised = key in ('ak', 'shotgun', 'superShotgun')
+        values = low * 1.05 + mid * 1.15 + high * .95 if revised else low * .72 + mid + high * 1.5
         values = resample_poly(values, RATE, rate)
         values = np.interp(np.arange(round(duration * RATE)) * pitch, np.arange(len(values)), values, right=0)
         # Close, dry competitive-shooter report: strong onset, short tail, distinct mechanism.
         design = {
-            'pistol': (.038, .027, .10, 2600), 'ak': (.052, .044, .11, 1850),
+            'pistol': (.038, .027, .10, 2600), 'ak': (.048, .038, .035, 1850),
             'smg': (.026, .020, .065, 3300), 'dmr': (.065, .051, .10, 2400),
-            'rifle': (.110, .075, .13, 1250), 'shotgun': (.072, .062, .15, 1650),
-            'superShotgun': (.090, .080, .16, 1100), 'hmg': (.055, .040, .13, 1500),
+            'rifle': (.110, .075, .13, 1250), 'shotgun': (.095, .069, .045, 1650),
+            'superShotgun': (.120, .082, .05, 1100), 'hmg': (.055, .040, .13, 1500),
         }
         decay, mechanical_time, mechanical_gain, metal_hz = design[key]
         t = np.arange(len(values)) / RATE
@@ -64,11 +65,11 @@ def prepare(root):
         rng = np.random.default_rng(list(CONFIG).index(key) + 607)
         # An original short broadband crack adds definition without copying game assets.
         crack = sosfilt(butter(2, [1700, 7900], 'bandpass', fs=RATE, output='sos'), rng.normal(size=len(t)))
-        values += crack * np.exp(-t / .0045) * (.085 if key == 'smg' else .12)
+        values += crack * np.exp(-t / .0045) * (0 if revised else .085 if key == 'smg' else .12)
         for delay, scale in [(mechanical_time, 1), (mechanical_time + .019, .35)]:
             q = np.maximum(0, t - delay)
             grit = sosfilt(butter(2, [900, 6500], 'bandpass', fs=RATE, output='sos'), rng.normal(size=len(t)))
-            mechanism = (grit * .65 + np.sin(2*np.pi*metal_hz*q) * .35)
+            mechanism = grit if revised else (grit * .65 + np.sin(2*np.pi*metal_hz*q) * .35)
             values += mechanism * np.exp(-q / .004) * np.minimum(1, q / .0006) * (t >= delay) * mechanical_gain * scale
         values = np.tanh(values * 1.1) / 1.1
         peak = np.max(np.abs(values))

@@ -9,12 +9,12 @@ License: https://creativecommons.org/publicdomain/zero/1.0/
 | Game weapon | Original recording |
 | --- | --- |
 | Pistol | Walther PPQ / X_39P.wav |
-| AK-47 | AK-47 / C_28P.wav |
+| AK-47 | AK-47 / C_34P.wav |
 | Vector SMG | Carl Gustav M45 / G_31P.wav |
 | Sokol DMR | AR-15 / D_32P.wav |
 | Heavy rifle | Tikka / W_24P.wav |
-| Shotgun | Mossberg / N_30P.wav |
-| Cerberus | Nova / O_21P.wav |
+| Shotgun | Mossberg / N_26P.wav |
+| Cerberus | Nova / O_17P.wav |
 | Grom HMG | Mosin Nagant / M_21P.wav |
 
 These are adapted sound designs for game weapon classes; the source weapon is not always the exact model depicted. Editing: isolate one report, mix to mono, remove subsonic noise, soften high frequencies, adjust pitch for the weapon class, mildly compress, shorten/fade tails and encode 24 kHz/16-bit PCM. Original WAV SHA-256 and crop offsets are retained alongside embedded samples in music.js.
@@ -30,3 +30,7 @@ Flame and hammer use original designed effects and do not include third-party re
 ## Короткие тактические выстрелы
 
 Новая обработка сохраняет отдельные CC0-записи, сокращает хвосты до 0,15–0,45 с и добавляет авторский короткий хлопок и механические щелчки с разными тембрами и задержками для каждого оружия. PCM повышен до 24 кГц для чётких деталей; пики ограничены 0,72, громкости оружейных профилей сохранены. Звуки Counter-Strike не используются.
+
+## Уточнение АК и дробовиков
+
+Для АК, дробовика и «Цербера» выбраны другие исходные записи. У этих трёх убран добавленный шумовой хлопок и тональный металлический щелчок, сохранён основной записанный выстрел и тихая шумовая механика. АК суше; у дробовиков больше тела и мягче резкий верх. Остальные записи и звуки гранат не изменены.
