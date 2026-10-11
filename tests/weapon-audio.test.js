@@ -67,3 +67,32 @@ test('Gun reports use eight different recordings and keep the effects bus quiet'
   for(const key of Object.keys(SFX.profiles)){audio.play(key);assert.ok(ctx.gains.at(-1).gain.value<=.32);}
   audio.stopAll();
 });
+
+test('All four approved grenade effects remain distinct, quiet and click-free at web and desktop rates',()=>{
+  const kinds=Object.keys(require('../content.js').GRENADES);
+  assert.deepEqual(Object.keys(SFX.grenadeProfiles).sort(),kinds.map(k=>'grenade:'+k).sort());
+  for(const rate of [24000,44100,48000]){
+    const hashes=new Set();
+    for(const kind of kinds){
+      const key='grenade:'+kind,data=SFX.samples(key,rate);let peak=0,energy=0;
+      for(const n of data){assert.ok(Number.isFinite(n));peak=Math.max(peak,Math.abs(n));energy+=n*n;}
+      assert.ok(peak>.15&&peak<=.321);assert.ok(energy>1);
+      assert.ok(Math.abs(data[0])<.001&&Math.abs(data.at(-1))<.001);
+      assert.equal(data.length,Math.ceil(SFX.grenadeProfiles[key].length*rate));
+      hashes.add(createHash('sha256').update(Buffer.from(data.buffer)).digest('hex'));
+    }
+    assert.equal(hashes.size,4);
+  }
+});
+
+test('Grenade playback caches the approved variant and obeys distance, muting, pause and voice limits',()=>{
+  const ctx=context(),audio=SFX.create(ctx,{random:()=>.5,maxVoices:3});audio.warm();const warmed=ctx.buffers;
+  audio.playGrenade('frag');const near=ctx.gains.at(-1).gain.value;
+  audio.playGrenade('frag',{local:false,dx:-600,dy:0});assert.ok(ctx.gains.at(-1).gain.value<near/3);assert.ok(ctx.pans.at(-1).pan.value<0);
+  for(let i=0;i<20;i++)audio.playGrenade('molotov');
+  assert.equal(ctx.buffers,warmed);assert.equal(ctx.sources.filter(s=>!s.stopped).length,3);
+  assert.equal(ctx.sources.at(-1).playbackRate.value,1);
+  assert.equal(audio.playGrenade('mine'),false);assert.equal(audio.playGrenade('frag',{local:false,dx:1600}),false);
+  audio.setEnabled(false);assert.equal(ctx.sources.filter(s=>!s.stopped).length,0);assert.equal(audio.playGrenade('flash'),false);
+  audio.setEnabled(true);ctx.state='suspended';assert.equal(audio.playGrenade('shock'),false);
+});
