@@ -1,7 +1,10 @@
 ; Keep the application identity and user-data folder on every upgrade.
 !macro customWelcomePage
-  !define MUI_WELCOMEPAGE_TITLE "КАРАНТИН — подготовка к операции"
-  !define MUI_WELCOMEPAGE_TEXT "Установите игру и постоянный лаунчер.$\r$\n$\r$\n• Одиночная игра и кооператив до 4 бойцов.$\r$\n• Новые версии игры — прямо в лаунчере.$\r$\n• Кнопки, громкость и режим экрана сохраняются при обновлении.$\r$\n$\r$\nДалее вы сможете выбрать папку установки и ярлыки."
+  !define MUI_WELCOMEPAGE_TITLE "Установка Карантина"
+  !define MUI_WELCOMEPAGE_TEXT "Игра и постоянный лаунчер.$\r$\n$\r$\n• Кооператив до четырёх бойцов.$\r$\n• Обновления игры в лаунчере.$\r$\n• Настройки сохраняются.$\r$\n$\r$\nДалее: папка установки и ярлыки."
+  !define MUI_FINISHPAGE_TITLE "Карантин установлен"
+  !define MUI_FINISHPAGE_TEXT "Лаунчер готов к работе.$\r$\n$\r$\nСоздай комнату и передай код друзьям.$\r$\n$\r$\nНовые версии игры можно загружать через лаунчер."
+  !define MUI_FINISHPAGE_RUN_TEXT "Открыть лаунчер Карантина"
   !insertmacro MUI_PAGE_WELCOME
 !macroend
 
