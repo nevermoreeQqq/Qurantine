@@ -8,14 +8,21 @@ contextBridge.exposeInMainWorld('quarantineDesktop',{
   installVersion:version=>ipcRenderer.invoke('launcher:install',version),
   settings:()=>ipcRenderer.invoke('launcher:settings'),
   saveSettings:value=>ipcRenderer.invoke('launcher:save-settings',value),
+  saveGameSettings:(key,value)=>ipcRenderer.invoke('game:save-settings',key,value),
+  fullscreen:value=>ipcRenderer.invoke('game:fullscreen',value),
+  fullscreenChanged:callback=>{const listener=(_,value)=>callback(value);ipcRenderer.on('game:fullscreen-changed',listener);return()=>ipcRenderer.removeListener('game:fullscreen-changed',listener);},
   newsVideo:version=>ipcRenderer.invoke('launcher:news-video',version),
   progress:callback=>{const listener=(_,value)=>callback(value);ipcRenderer.on('update:progress',listener);return()=>ipcRenderer.removeListener('update:progress',listener);}
 });
 if(/^https?:$/.test(location.protocol)){
   const preferences=ipcRenderer.sendSync('launcher:settings-sync');
-  if(typeof preferences.gameMusic==='boolean'){
-    try{localStorage.setItem('quarantine-audio-v3',JSON.stringify({music:preferences.gameMusic,effects:preferences.gameEffects,volume:preferences.gameMusicVolume/100}));}catch{}
-  }
+  const stored=ipcRenderer.sendSync('game:settings-sync');
+  // Import older local preferences once; afterwards the file survives ports and updates.
+  for(const key of ['quarantine-controls-v3','quarantine-interface-keys-v1','quarantine-audio-v3','quarantine-display-v1'])try{
+    let value=stored[key];
+    if(value===undefined){value=JSON.parse(localStorage.getItem(key));if(value===null&&key==='quarantine-audio-v3')value={music:preferences.gameMusic,effects:preferences.gameEffects,volume:preferences.gameMusicVolume/100,effectsVolume:1};if(value!==null)ipcRenderer.sendSync('game:import-settings',key,value);}
+    if(value!==undefined&&value!==null)localStorage.setItem(key,JSON.stringify(value));
+  }catch{}
 }
 window.addEventListener('DOMContentLoaded',async()=>{
   if(!/^https?:$/.test(location.protocol)||document.querySelector('#update-button'))return;
