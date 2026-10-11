@@ -292,3 +292,21 @@ body.graphite{-webkit-user-select:none;user-select:none}
 /* Shared claw emblem in the graphite interface. */
 .graphite .brand-icon{display:flex;width:40px;height:40px;flex-shrink:0}.brand-icon img,.danger-symbol img{display:block;object-fit:contain}.danger-symbol img{margin:0 auto}
 .menu-emblem{display:block;object-fit:contain;margin-bottom:18px}
+
+/* Keep the controls list inside the settings panel and reserve the footer. */
+.graphite .settings-card{min-width:0;min-height:0}
+.graphite .settings-card>p,
+.graphite .settings-card>.bindings-search,
+.graphite .settings-card>.binding-search-count{flex-shrink:0}
+.graphite .settings-card .bindings-grid{flex:1 1 0;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain}
+.graphite .settings-card .bindings-grid>label{min-width:0;overflow-wrap:anywhere}
+.graphite .settings-card .binding-button{flex-shrink:0}
+.graphite .settings-card .settings-footer{flex-shrink:0;flex-wrap:wrap;gap:8px 12px;padding-top:12px;border-top:1px solid var(--line);min-width:0}
+.graphite .settings-footer #binding-prompt{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.graphite .settings-footer #reset-bindings{flex:0 0 auto;max-width:100%;margin-left:auto}
+.graphite .settings-card #close-settings{color:#fff}
+.graphite .settings-card #close-settings svg{stroke:currentColor}
+@media(max-height:520px){
+  .graphite .settings-card{display:block;height:auto;overflow:auto}
+  .graphite .settings-card .bindings-grid{overflow:visible}
+}
