@@ -81,7 +81,12 @@
         "en_US"
       ],
       "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico"
+      "uninstallerIcon": "assets/icon.ico",
+      "include": "desktop/installer.nsh",
+      "installerSidebar": "desktop/installer-sidebar.bmp",
+      "uninstallerSidebar": "desktop/installer-sidebar.bmp",
+      "installerHeader": "desktop/installer-header.bmp",
+      "deleteAppDataOnUninstall": false
     },
     "mac": {
       "category": "public.app-category.action-games",
