@@ -1,6 +1,6 @@
 {
   "name": "quarantine-2d",
-  "version": "6.0.7",
+  "version": "6.0.8",
   "private": true,
   "description": "2D survival shooter against mutants",
   "scripts": {
@@ -74,7 +74,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Карантин",
+      "shortcutName": "\u041a\u0430\u0440\u0430\u043d\u0442\u0438\u043d",
       "artifactName": "Quarantine-Setup-${version}.exe",
       "installerLanguages": [
         "ru_RU",
