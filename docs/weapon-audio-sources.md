@@ -22,3 +22,7 @@ These are adapted sound designs for game weapon classes; the source weapon is no
 Reproduction: install numpy and scipy in a development environment, extract the archive, then run tools/prepare-weapon-recordings.py with the extracted Prepared SFX Library directory and an output JSON path. That JSON supplies the recordings object embedded in music.js. No Python dependencies are needed by the game.
 
 Flame and hammer use original designed effects and do not include third-party recordings.
+
+## Уточнение чёткости
+
+По отзыву о глухом звучании уменьшен бас до 400 Гц, усилены детали выше 1600 Гц и расширен пропускаемый диапазон до 5–6,4 кГц. Пиковый уровень PCM, громкость профилей и общий ограничитель сохранены. Огнемёт и молоток также получили больше деталей. Записи, тайминг и классы оружия прежние; звуки гранат сохранены.
