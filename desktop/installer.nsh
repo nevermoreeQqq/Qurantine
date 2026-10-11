@@ -14,7 +14,6 @@
   !include LogicLib.nsh
   !macro customPageAfterChangeDir
     Page custom QuarantineShortcuts QuarantineShortcutsLeave
-  !macroend
   Function QuarantineShortcuts
     ${If} ${isUpdated}
       Abort
@@ -38,6 +37,7 @@
     ${NSD_GetState} $desktopShortcutCheckbox $desktopShortcutChoice
     ${NSD_GetState} $startShortcutCheckbox $startShortcutChoice
   FunctionEnd
+  !macroend
   !macro customInstall
     ${If} $desktopShortcutChoice != ""
       ${If} $desktopShortcutChoice == ${BST_UNCHECKED}
