@@ -17,7 +17,7 @@ License: https://creativecommons.org/publicdomain/zero/1.0/
 | Cerberus | Nova / O_21P.wav |
 | Grom HMG | Mosin Nagant / M_21P.wav |
 
-These are adapted sound designs for game weapon classes; the source weapon is not always the exact model depicted. Editing: isolate one report, mix to mono, remove subsonic noise, soften high frequencies, adjust pitch for the weapon class, mildly compress, shorten/fade tails and encode 16 kHz/16-bit PCM. Original WAV SHA-256 and crop offsets are retained alongside embedded samples in music.js.
+These are adapted sound designs for game weapon classes; the source weapon is not always the exact model depicted. Editing: isolate one report, mix to mono, remove subsonic noise, soften high frequencies, adjust pitch for the weapon class, mildly compress, shorten/fade tails and encode 24 kHz/16-bit PCM. Original WAV SHA-256 and crop offsets are retained alongside embedded samples in music.js.
 
 Reproduction: install numpy and scipy in a development environment, extract the archive, then run tools/prepare-weapon-recordings.py with the extracted Prepared SFX Library directory and an output JSON path. That JSON supplies the recordings object embedded in music.js. No Python dependencies are needed by the game.
 
@@ -26,3 +26,7 @@ Flame and hammer use original designed effects and do not include third-party re
 ## Уточнение чёткости
 
 По отзыву о глухом звучании уменьшен бас до 400 Гц, усилены детали выше 1600 Гц и расширен пропускаемый диапазон до 5–6,4 кГц. Пиковый уровень PCM, громкость профилей и общий ограничитель сохранены. Огнемёт и молоток также получили больше деталей. Записи, тайминг и классы оружия прежние; звуки гранат сохранены.
+
+## Короткие тактические выстрелы
+
+Новая обработка сохраняет отдельные CC0-записи, сокращает хвосты до 0,15–0,45 с и добавляет авторский короткий хлопок и механические щелчки с разными тембрами и задержками для каждого оружия. PCM повышен до 24 кГц для чётких деталей; пики ограничены 0,72, громкости оружейных профилей сохранены. Звуки Counter-Strike не используются.
