@@ -75,7 +75,7 @@ function createGameServer(options={}){
         return json(res,404,{error:'Неизвестный запрос'});
       }
       if(req.method!=='GET')return json(res,405,{error:'Method not allowed'});
-      let pathname;try{pathname=decodeURIComponent(url.pathname);}catch{return json(res,400,{error:'Bad path'});}const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));const allowed=new Set(['index.html','style.css','game.js','core.js','content.js','controls.js','music.js','render.js','simulation.js','terrain.js','netcode.js','preview.jpg']);
+      let pathname;try{pathname=decodeURIComponent(url.pathname);}catch{return json(res,400,{error:'Bad path'});}const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));const allowed=new Set([path.normalize('assets/icon.png'),'index.html','style.css','game.js','core.js','content.js','controls.js','music.js','render.js','simulation.js','terrain.js','netcode.js','preview.jpg']);
       for(const f of ['desktop/launcher.html','desktop/launcher.js','desktop/launcher.css','desktop/launcher-music.js','desktop/media/cordon.svg','desktop/media/collision-poster.svg','desktop/media/collision-6.0.1.webm'])allowed.add(path.normalize(f));
       if(!file.startsWith(root+path.sep)||!allowed.has(path.relative(root,file)))return json(res,404,{error:'Not found'});
       fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return;}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);});

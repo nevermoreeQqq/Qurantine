@@ -22,7 +22,7 @@ else{
     const {createGameServer}=require(path.join(updater.runtimeRoot,'server.js'));
     server=createGameServer({updateHandler:updater.handle});
     const gameHandlers=server.listeners('request');server.removeAllListeners('request');
-    server.on('request',async(req,res)=>{try{if(await updater.handle(req,res,new URL(req.url,'http://localhost')))return;for(const handler of gameHandlers)handler(req,res);}catch(error){if(!res.headersSent)res.writeHead(400);res.end('Неверный запрос');}});
+    server.on('request',async(req,res)=>{try{const url=new URL(req.url,'http://localhost');if(req.method==='GET'&&url.pathname==='/assets/icon.png'){res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'no-cache'});res.end(fs.readFileSync(path.join(baseRoot,'assets/icon.png')));return;}if(await updater.handle(req,res,url))return;for(const handler of gameHandlers)handler(req,res);}catch(error){if(!res.headersSent)res.writeHead(400);res.end('Неверный запрос');}});
     try{await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(5173,'0.0.0.0',resolve);});}
     catch(error){if(error.code==='EADDRINUSE')await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'0.0.0.0',resolve);});else{dialog.showErrorBox('Карантин',error.message);app.quit();return;}}
     address=`http://localhost:${server.address().port}`;
