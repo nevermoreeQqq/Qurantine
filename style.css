@@ -291,3 +291,4 @@ body.graphite{-webkit-user-select:none;user-select:none}
 
 /* Shared claw emblem in the graphite interface. */
 .graphite .brand-icon{display:flex;width:40px;height:40px;flex-shrink:0}.brand-icon img,.danger-symbol img{display:block;object-fit:contain}.danger-symbol img{margin:0 auto}
+.menu-emblem{display:block;object-fit:contain;margin-bottom:18px}
