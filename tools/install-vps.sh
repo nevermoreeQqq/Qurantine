@@ -4,7 +4,7 @@ set -Eeuo pipefail
 if [ "$(id -u)" != 0 ]; then echo 'Run as root'; exit 1; fi
 SOURCE=$(cd "$(dirname "$0")/.." && pwd)
 PUBLIC_URL=${1:?Usage: bash tools/install-vps.sh http://PUBLIC_IP [room-limit]}
-ROOM_LIMIT=${2:-1}
+ROOM_LIMIT=${2:-2}
 if [[ ! $PUBLIC_URL =~ ^https?://[a-zA-Z0-9.:-]+$ ]]; then echo 'Invalid public URL'; exit 1; fi
 if [[ ! $ROOM_LIMIT =~ ^[0-9]+$ ]] || (( ROOM_LIMIT < 1 || ROOM_LIMIT > 30 )); then echo 'Room limit must be 1..30'; exit 1; fi
 if [ "$(uname -m)" != x86_64 ]; then echo 'This installer supports x86_64'; exit 1; fi

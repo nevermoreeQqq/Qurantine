@@ -37,7 +37,7 @@
     staticValid(x,y,r=20){return x>r+20&&y>r+20&&x<WORLD.w-r-20&&y<WORLD.h-r-20&&!OBSTACLES.some(o=>circleRect(x,y,r,o));}
     valid(x,y,r,kind='player'){return this.staticValid(x,y,r)&&(kind!=='enemy'||!this.graves.some(g=>circleRect(x,y,r,{x:g.x-20,y:g.y-34,w:40,h:68})))&&!this.barriers.some(b=>(kind==='enemy'||b.type!=='door')&&circleRect(x,y,r,b));}
     move(body,dx,dy,kind='prop'){const blockers=kind==='enemy'?this.players:kind==='player'?this.enemies.filter(solidEnemy):[];moveBody(body,dx,dy,(x,y)=>this.valid(x,y,body.r,kind),blockers);}
-    sight(a,b,padding=0){return !OBSTACLES.some(o=>segmentRect(a.x,a.y,b.x,b.y,{x:o.x-padding,y:o.y-padding,w:o.w+padding*2,h:o.h+padding*2})!==null);}
+    sight(a,b,padding=0){for(const o of OBSTACLES)if(segmentRect(a.x,a.y,b.x,b.y,o,padding)!==null)return false;return true;}
     spot(x,y,min,max,r=18){for(let i=0;i<180;i++){const a=this.rand(0,6.28),d=this.rand(min,max),p={x:clamp(x+Math.cos(a)*d,50,WORLD.w-50),y:clamp(y+Math.sin(a)*d,50,WORLD.h-50)};if(this.valid(p.x,p.y,r)&&this.players.every(q=>dist(p,q)>55))return p;}return{x:1200,y:850};}
     pickup(type,x,y,amount=1){const money=type==='gold'||type==='bill';this.pickups.push({id:this.id(),type,x,y,amount,phase:this.rand(0,6.28),...(money?{life:type==='bill'?150:90}:{})});const supplies=this.pickups.filter(p=>!['gold','bill'].includes(p.type));if(supplies.length>40)this.pickups.splice(this.pickups.indexOf(supplies[0]),1);if(this.pickups.length>180)this.pickups.shift();}
     scatterMoney(n){for(let i=0;i<n;i++){const pos=this.spot(1500,1080,200,1450);this.pickup('gold',pos.x,pos.y,8+Math.floor(this.rand(0,9)));}}
