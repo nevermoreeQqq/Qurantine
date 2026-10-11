@@ -9,11 +9,11 @@ License: https://creativecommons.org/publicdomain/zero/1.0/
 | Game weapon | Original recording |
 | --- | --- |
 | Pistol | Walther PPQ / X_39P.wav |
-| AK-47 | AK-47 / C_34P.wav |
+| AK-47 | AK-47 / C_31P.wav |
 | Vector SMG | Carl Gustav M45 / G_31P.wav |
 | Sokol DMR | AR-15 / D_32P.wav |
 | Heavy rifle | Tikka / W_24P.wav |
-| Shotgun | Mossberg / N_26P.wav |
+| Shotgun | Nova / O_21P.wav |
 | Cerberus | Nova / O_17P.wav |
 | Grom HMG | Mosin Nagant / M_21P.wav |
 
@@ -34,3 +34,7 @@ Flame and hammer use original designed effects and do not include third-party re
 ## Уточнение АК и дробовиков
 
 Для АК, дробовика и «Цербера» выбраны другие исходные записи. У этих трёх убран добавленный шумовой хлопок и тональный металлический щелчок, сохранён основной записанный выстрел и тихая шумовая механика. АК суше; у дробовиков больше тела и мягче резкий верх. Остальные записи и звуки гранат не изменены.
+
+## Второе уточнение АК и 12 калибра
+
+АК использует более короткую, светлую обработку C_31P, 12 калибр — отдельную запись Nova O_21P с коротким плотным ударом. «Цербер» и остальные одобренные записи сохранены без изменений.

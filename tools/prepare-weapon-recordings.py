@@ -16,11 +16,11 @@ from scipy.signal import butter, sosfilt, resample_poly
 # Different original recordings, rather than one noise patch with varied pitch.
 CONFIG = {
     'pistol': ('Walther PPQ/X_39P.wav', .20, 7800, 1),
-    'ak': ('AK-47/C_34P.wav', .25, 6200, 1),
+    'ak': ('AK-47/C_31P.wav', .25, 7400, 1.06),
     'smg': ('Carl Gustav M45/G_31P.wav', .15, 8500, 1.04),
     'dmr': ('AR-15/D_32P.wav', .30, 7900, .94),
     'rifle': ('Tikka/W_24P.wav', .44, 7200, .86),
-    'shotgun': ('Mossberg/N_26P.wav', .38, 5700, 1),
+    'shotgun': ('Nova/O_21P.wav', .38, 6500, 1.08),
     'superShotgun': ('Nova/O_17P.wav', .45, 5200, .96),
     'hmg': ('Mosin Nagant/M_21P.wav', .24, 7800, .9),
 }
@@ -47,14 +47,16 @@ def prepare(root):
         mid = sosfilt(butter(2, 1600, 'lowpass', fs=rate, output='sos'), values) - low
         high = values - low - mid
         revised = key in ('ak', 'shotgun', 'superShotgun')
-        values = low * 1.05 + mid * 1.15 + high * .95 if revised else low * .72 + mid + high * 1.5
+        if key == 'ak': values = low * .45 + mid * 1.2 + high * 1.35
+        elif key == 'shotgun': values = low * .85 + mid * 1.3 + high * 1.15
+        else: values = low * 1.05 + mid * 1.15 + high * .95 if revised else low * .72 + mid + high * 1.5
         values = resample_poly(values, RATE, rate)
         values = np.interp(np.arange(round(duration * RATE)) * pitch, np.arange(len(values)), values, right=0)
         # Close, dry competitive-shooter report: strong onset, short tail, distinct mechanism.
         design = {
-            'pistol': (.038, .027, .10, 2600), 'ak': (.048, .038, .035, 1850),
+            'pistol': (.038, .027, .10, 2600), 'ak': (.032, .028, .025, 1850),
             'smg': (.026, .020, .065, 3300), 'dmr': (.065, .051, .10, 2400),
-            'rifle': (.110, .075, .13, 1250), 'shotgun': (.095, .069, .045, 1650),
+            'rifle': (.110, .075, .13, 1250), 'shotgun': (.060, .054, .03, 1650),
             'superShotgun': (.120, .082, .05, 1100), 'hmg': (.055, .040, .13, 1500),
         }
         decay, mechanical_time, mechanical_gain, metal_hz = design[key]
