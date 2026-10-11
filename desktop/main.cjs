@@ -6,6 +6,7 @@ const {createSettings}=require('./settings.cjs');
 const {createGameSettings}=require('./game-settings.cjs');
 const {isTrustedNavigation}=require('./navigation.cjs');
 app.setName('Quarantine');
+if(process.platform==='win32')app.setAppUserModelId('com.quarantine.cordon');
 let server,window,updater,address,busy=false;
 const cycleTest=process.argv.includes('--smoke-update-cycle'),cycleStage=Number(process.argv.find(a=>a.startsWith('--smoke-cycle='))?.split('=')[1]||0);
 if(cycleTest||process.argv.includes('--smoke-test')||process.argv.includes('--launcher-review')){const smokeData=path.join(require('node:os').tmpdir(),cycleTest?'quarantine-bootstrap-cycle-v6':process.argv.includes('--launcher-review')?'quarantine-launcher-review':'quarantine-bootstrap-smoke-v6');fs.mkdirSync(smokeData,{recursive:true});app.setPath('userData',smokeData);}
