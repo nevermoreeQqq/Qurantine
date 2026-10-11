@@ -20,7 +20,7 @@ CONFIG = {
     'smg': ('Carl Gustav M45/G_31P.wav', .15, 8500, 1.04),
     'dmr': ('AR-15/D_32P.wav', .30, 7900, .94),
     'rifle': ('Tikka/W_24P.wav', .44, 7200, .86),
-    'shotgun': ('Nova/O_21P.wav', .38, 6500, 1.08),
+    'shotgun': ('Mossberg/N_30P.wav', .55, 5800, 1),
     'superShotgun': ('Nova/O_17P.wav', .45, 5200, .96),
     'hmg': ('Mosin Nagant/M_21P.wav', .24, 7800, .9),
 }
@@ -48,7 +48,7 @@ def prepare(root):
         high = values - low - mid
         revised = key in ('ak', 'shotgun', 'superShotgun')
         if key == 'ak': values = low * .45 + mid * 1.2 + high * 1.35
-        elif key == 'shotgun': values = low * .85 + mid * 1.3 + high * 1.15
+        elif key == 'shotgun': values = low * 1.8 + mid * 1.25 + high * .85
         else: values = low * 1.05 + mid * 1.15 + high * .95 if revised else low * .72 + mid + high * 1.5
         values = resample_poly(values, RATE, rate)
         values = np.interp(np.arange(round(duration * RATE)) * pitch, np.arange(len(values)), values, right=0)
@@ -56,7 +56,7 @@ def prepare(root):
         design = {
             'pistol': (.038, .027, .10, 2600), 'ak': (.032, .028, .025, 1850),
             'smg': (.026, .020, .065, 3300), 'dmr': (.065, .051, .10, 2400),
-            'rifle': (.110, .075, .13, 1250), 'shotgun': (.060, .054, .03, 1650),
+            'rifle': (.110, .075, .13, 1250), 'shotgun': (.125, .240, .065, 1650),
             'superShotgun': (.120, .082, .05, 1100), 'hmg': (.055, .040, .13, 1500),
         }
         decay, mechanical_time, mechanical_gain, metal_hz = design[key]
@@ -73,6 +73,14 @@ def prepare(root):
             grit = sosfilt(butter(2, [900, 6500], 'bandpass', fs=RATE, output='sos'), rng.normal(size=len(t)))
             mechanism = grit if revised else (grit * .65 + np.sin(2*np.pi*metal_hz*q) * .35)
             values += mechanism * np.exp(-q / .004) * np.minimum(1, q / .0006) * (t >= delay) * mechanical_gain * scale
+        if key == 'shotgun':
+            # Broad pressure body and a two-stage, non-tonal pump after the report.
+            body = sosfilt(butter(2, [65, 520], 'bandpass', fs=RATE, output='sos'), rng.normal(size=len(t)))
+            values += body * .20 * np.exp(-t / .060) * np.minimum(1, t / .001)
+            for delay, strength in [(.235, .095), (.345, .075)]:
+                q = np.maximum(0, t - delay)
+                pump = sosfilt(butter(2, [350, 3600], 'bandpass', fs=RATE, output='sos'), rng.normal(size=len(t)))
+                values += pump * strength * np.exp(-q / .018) * np.minimum(1, q / .002) * (t >= delay)
         values = np.tanh(values * 1.1) / 1.1
         peak = np.max(np.abs(values))
         if peak > .72:

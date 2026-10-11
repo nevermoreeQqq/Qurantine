@@ -13,7 +13,7 @@ License: https://creativecommons.org/publicdomain/zero/1.0/
 | Vector SMG | Carl Gustav M45 / G_31P.wav |
 | Sokol DMR | AR-15 / D_32P.wav |
 | Heavy rifle | Tikka / W_24P.wav |
-| Shotgun | Nova / O_21P.wav |
+| Shotgun | Mossberg / N_30P.wav |
 | Cerberus | Nova / O_17P.wav |
 | Grom HMG | Mosin Nagant / M_21P.wav |
 
@@ -38,3 +38,7 @@ Flame and hammer use original designed effects and do not include third-party re
 ## Второе уточнение АК и 12 калибра
 
 АК использует более короткую, светлую обработку C_31P, 12 калибр — отдельную запись Nova O_21P с коротким плотным ударом. «Цербер» и остальные одобренные записи сохранены без изменений.
+
+## Узнаваемый 12 калибр
+
+Обычный дробовик использует запись Mossberg N_30P с широким низким ударом, менее резким верхом и двухэтапной авторской шумовой механикой помпы после выстрела. Длительность 0,55 с. АК, «Цербер» и остальные звуки сохранены.
