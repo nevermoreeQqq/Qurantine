@@ -1,11 +1,11 @@
-# Weapon sound design
+# Weapon sound design — recording revision
 
-Ten original sound profiles follow the weapons: dry pistol report; sharp AK crack; short SMG snap; longer DMR report; deep heavy rifle boom; broad shotgun blast; heavier Cerberus blast; low belt-fed machine-gun rhythm; overlapping flame jets; and hammer swing/impact. These are authored synthesized effects inspired by weapon acoustics, not recordings of the named real-world models.
+The first procedural gun reports were too similar and harsh. All eight firearm profiles now use different edited CC0 recordings from The Free Firearm Sound Library; see weapon-audio-sources.md for authors, original filenames, licensing and reproduction. Flame jets and hammer swing/impact are designed separately with softer noise and no artificial ringing tone.
 
-Muzzle transient, pressure body, outdoor reflections and action clack have separate envelopes. Three cached variants and small pitch variation avoid identical repeated samples. The effects bus is deliberately quiet (0.5 gain) with compressed peaks; distant shots lose volume and high frequencies and pan relative to the listener. Turrets reuse the matching weapon profile at reduced strength.
+The edits reduce high-frequency sharpness, subsonic noise and excessive tails while preserving the original report. Each weapon has its own source, duration, pitch treatment and quiet playback level. The sources match weapon classes, not always the exact depicted models.
 
-Solo events and predicted local co-op shots use the same playback path. Confirmed local co-op shots retain the existing deduplication. Muting, platform suspension and leaving a match stop weapon tails. At most 24 voices play at once, with remote tails displaced first.
+PCM is embedded in music.js, already included in Windows, macOS, web and launcher game/update packages. Samples decode once and variants are cached; there are no additional network requests, files to load or archive-format changes.
 
-The module ships inside music.js, already included in Windows, macOS, web and launcher game/update packages; no extra asset requests or changes to archive formats. Weapon balance and network protocols are unchanged.
+The effects bus remains at 0.5 gain, with limited peaks. Distant shots fade, darken and pan relative to the listener. At most 24 voices play simultaneously, with remote tails displaced first. Existing prediction deduplication, mute, suspension and match-exit cleanup remain unchanged. Weapon balance and networking are preserved.
 
-Validation: 155 Node tests passed, including every weapon at 44.1/48 kHz, cache reuse during 200 rapid shots, voice limiting, mute/pause, distance/pan and stereo fallback. macOS Electron smoke launch and browser playback completed without audio errors.
+Validation: 156 Node tests passed, including audio at 44.1/48 kHz, unclipped samples, eight unique recording sources, rapid-fire cache reuse, voice limits, quiet gain, mute/pause and positional audio. Native macOS Electron smoke launch and browser playback passed. The local preview offers Previous/New buttons and bursts for comparison.

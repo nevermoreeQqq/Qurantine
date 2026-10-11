@@ -11,7 +11,7 @@ test('Every weapon has distinct, finite, unclipped audio at desktop and web samp
     for(const key of Object.keys(WEAPONS))for(let variant=0;variant<3;variant++){
       const data=SFX.samples(key,rate,variant);let peak=0,energy=0;
       for(const value of data){assert.ok(Number.isFinite(value));peak=Math.max(peak,Math.abs(value));energy+=value*value;}
-      assert.ok(peak<=.821&&peak>.5);assert.ok(energy/data.length>.0001);
+      assert.ok(peak<=.731&&peak>.1);assert.ok(energy/data.length>.0001);
       assert.ok(Math.abs(data[0])<.001&&Math.abs(data.at(-1))<.01,'Click-free endpoints');
       hashes.add(createHash('sha256').update(Buffer.from(data.buffer)).digest('hex'));
     }
@@ -56,4 +56,14 @@ test('Voice limit drops a remote tail before a local shot, and supports browsers
   const ctx=context();delete ctx.createStereoPanner;const audio=SFX.create(ctx,{maxVoices:2});
   audio.play('rifle');audio.play('ak',{local:false,dx:500});audio.play('pistol');
   assert.equal(ctx.sources[0].stopped,false);assert.equal(ctx.sources[1].stopped,true);assert.equal(ctx.sources[2].stopped,false);
+});
+
+
+test('Gun reports use eight different recordings and keep the effects bus quiet',()=>{
+  assert.equal(Object.keys(SFX.sources).length,8);assert.equal(new Set(Object.values(SFX.sources)).size,8);
+  assert.match(SFX.sources.ak,/AK-47/);
+  const ctx=context(),audio=SFX.create(ctx);
+  assert.equal(ctx.gains[0].gain.value,.5);
+  for(const key of Object.keys(SFX.profiles)){audio.play(key);assert.ok(ctx.gains.at(-1).gain.value<=.32);}
+  audio.stopAll();
 });
