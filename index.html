@@ -63,6 +63,8 @@
     </section>
     <footer class="statusbar"><span><i></i> <b id="operation-status">ГОТОВ К ОПЕРАЦИИ</b></span><span>R · ПЕРЕЗАРЯДКА <em>/</em> G / Q · ГРАНАТЫ <em>/</em> T · СЮРИКЕН <em>/</em> B · МАГАЗИН <em>/</em> E / F · СТРОИТЬ</span><span>CO-OP / 2D</span></footer>
   </main>
+  <button id="map-button" class="county-map-button hidden" title="Карта мира">КАРТА</button>
+  <section id="world-map-overlay" class="hidden county-map-overlay" role="dialog" aria-label="Карта мира"><div class="county-map-card"><header><div><small>КАРАНТИН / ОКРУГ</small><h2>КАРТА МИРА</h2></div><button id="close-world-map" aria-label="Закрыть карту">×</button></header><canvas id="world-map" width="1200" height="864"></canvas><p id="world-map-caption"></p></div></section>
   <script src="core.js"></script>
   <script src="content.js"></script>
   <script src="controls.js"></script>

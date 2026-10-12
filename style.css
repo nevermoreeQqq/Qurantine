@@ -310,3 +310,10 @@ body.graphite{-webkit-user-select:none;user-select:none}
   .graphite .settings-card{display:block;height:auto;overflow:auto}
   .graphite .settings-card .bindings-grid{overflow:visible}
 }
+
+.county-map-button{position:fixed;right:20px;bottom:50px;z-index:10;background:#111b17;border:1px solid #596657;color:#dddcc8;padding:8px 14px;font-size:11px;letter-spacing:2px}
+.county-map-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#030806dd;padding:16px}
+.county-map-overlay.hidden{display:none}
+.county-map-card{width:min(1100px,95vw);max-height:94vh;overflow:auto;background:#0e1712;border:1px solid #53604d;padding:18px;color:#d8d9c8}
+.county-map-card header{display:flex;justify-content:space-between;align-items:center}.county-map-card h2{margin:5px 0 12px;font-size:19px;letter-spacing:4px}.county-map-card small{font-size:10px;letter-spacing:3px;color:#93a087}
+#close-world-map{background:none;border:0;color:#fff;font-size:32px;padding:0 10px}#world-map{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain}.county-map-card p{font-size:11px;letter-spacing:1px;margin:14px 0 0;color:#aebba0}

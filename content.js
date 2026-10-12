@@ -1,11 +1,69 @@
 (function(root){
   'use strict';
-  const VERSION=6;
+  const VERSION=7;
   const COOP_SERVER='http://195.19.213.215';
-  const WORLD={w:3000,h:2160};
+  const WORLD={w:12000,h:8640,id:'cordon-county-1'};
   const OBSTACLES=[{x:310,y:250,w:310,h:180,type:'building'},{x:1460,y:220,w:370,h:200,type:'building'},{x:300,y:1130,w:310,h:290,type:'building'},{x:1690,y:1190,w:340,h:230,type:'building'},{x:830,y:520,w:156,h:84,type:'container'},{x:1450,y:740,w:92,h:210,type:'container'},{x:720,y:930,w:180,h:76,type:'container'},{x:1270,y:1210,w:230,h:84,type:'container'},{x:1820,y:590,w:110,h:110,type:'crates'},{x:1030,y:280,w:110,h:95,type:'crates'},{x:1000,y:1045,w:75,h:75,type:'crates'},{x:1310,y:530,w:85,h:85,type:'crates'},{x:460,y:690,w:120,h:66,type:'barricade'},{x:1960,y:920,w:120,h:66,type:'barricade'},{x:830,y:1430,w:150,h:66,type:'barricade'},
     {x:2330,y:250,w:370,h:260,type:'building'},{x:2420,y:1590,w:330,h:220,type:'building'},{x:460,y:1790,w:290,h:200,type:'building'},{x:1980,y:1810,w:160,h:86,type:'container'},{x:2600,y:1130,w:150,h:86,type:'container'},
     {x:640,y:845,w:116,h:53,type:'car',paint:'#3c6770'},{x:2030,y:843,w:120,h:55,type:'car',paint:'#774d41'},{x:2640,y:929,w:120,h:54,type:'car',paint:'#66754e'},{x:1140,y:1640,w:56,h:119,type:'car',paint:'#c1aa76'},{x:2770,y:1290,w:115,h:60,type:'car',paint:'#627a82'}];
+  const quarantineObstacleCount=OBSTACLES.length;
+  // Fixed county layout: the original quarantine compound remains the starting area.
+  const DISTRICTS=[
+    {name:'КОРДОН / 07',x:120,y:120,w:2760,h:1920,kind:'industrial'},
+    {name:'СЕВЕРНЫЙ ПРИГОРОД',x:3260,y:240,w:2600,h:2360,kind:'residential'},
+    {name:'СТАРЫЙ ЦЕНТР',x:6380,y:260,w:2440,h:2420,kind:'town'},
+    {name:'ВОСТОЧНАЯ ПРОМЗОНА',x:9280,y:260,w:2440,h:2460,kind:'industrial'},
+    {name:'СОСНОВЫЙ ЛЕС',x:200,y:2720,w:2600,h:2800,kind:'forest'},
+    {name:'ЮЖНЫЙ ПРИГОРОД',x:3280,y:3160,w:2580,h:2320,kind:'residential'},
+    {name:'МЕДИЦИНСКИЙ КВАРТАЛ',x:6380,y:3200,w:2400,h:2260,kind:'town'},
+    {name:'ГРУЗОВОЙ ТЕРМИНАЛ',x:9280,y:3200,w:2420,h:2240,kind:'industrial'},
+    {name:'ФЕРМЫ И ПОЛЯ',x:200,y:6160,w:5650,h:2200,kind:'farm'},
+    {name:'ЛЕСНОЙ ПОСЁЛОК',x:6380,y:6180,w:2360,h:2160,kind:'residential'},
+    {name:'ДАЛЬНИЙ ЛЕС',x:9300,y:6140,w:2400,h:2220,kind:'forest'}
+  ];
+  const ROADS=[{x:30,y:820,w:WORLD.w-60,h:180},{x:1120,y:30,w:175,h:WORLD.h-60},
+    ...[3000,6000,9000].map(x=>({x,y:30,w:180,h:WORLD.h-60})),
+    ...[2860,5700].map(y=>({x:30,y,w:WORLD.w-60,h:180}))];
+  for(const d of DISTRICTS.slice(1)){
+    if(d.kind==='forest'){
+      for(let y=d.y+100;y<d.y+d.h-70;y+=190)for(let x=d.x+100;x<d.x+d.w-70;x+=190){
+        const n=(Math.imul(x,73856093)^Math.imul(y,19349663))>>>0;if(n%5===0)continue;
+        OBSTACLES.push({x:x+(n%61)-30,y:y+(n%47)-23,w:38,h:38,type:'tree'});
+      }continue;
+    }
+    if(d.kind==='farm'){
+      for(let x=d.x+140;x<d.x+d.w-300;x+=900){OBSTACLES.push({x,y:d.y+260,w:300,h:190,type:'building',label:'АМБАР',roof:'#655343'});OBSTACLES.push({x:x+360,y:d.y+280,w:150,h:120,type:'building',label:'ДОМ',roof:'#685e50'});}
+      ROADS.push({x:d.x,y:d.y+650,w:d.w,h:100});continue;
+    }
+    const block=620;
+    for(let y=d.y+140;y<d.y+d.h-300;y+=block){
+      ROADS.push({x:d.x,y:y-100,w:d.w,h:90});
+      for(let x=d.x+140;x<d.x+d.w-300;x+=block){
+        if(y===d.y+140)ROADS.push({x:x-100,y:d.y,w:90,h:d.h});
+        if(d.kind==='industrial'){
+          OBSTACLES.push({x,y,w:340,h:230,type:'building',label:'СКЛАД',roof:'#435459'});
+          OBSTACLES.push({x:x+40,y:y+310,w:200,h:76,type:'container'});
+          OBSTACLES.push({x:x+370,y:y+200,w:110,h:54,type:'car',paint:'#676b59'});
+        }else if(d.kind==='town'){
+          OBSTACLES.push({x,y,w:360,h:220,type:'building',label:d.name.startsWith('МЕД')?'КЛИНИКА':'МАГАЗИН',roof:'#556068'});
+          OBSTACLES.push({x,y:y+300,w:210,h:120,type:'building',label:'ОФИС',roof:'#5e5e54'});
+          OBSTACLES.push({x:x+310,y:y+315,w:116,h:53,type:'car',paint:'#787260'});
+        }else{
+          for(const [dx,dy,roof]of[[0,0,'#705e50'],[280,0,'#626951'],[0,290,'#5b6570'],[280,290,'#755e56']])
+            OBSTACLES.push({x:x+dx,y:y+dy,w:170,h:130,type:'building',label:'ДОМ',roof});
+          OBSTACLES.push({x:x+190,y:y+160,w:110,h:52,type:'car',paint:'#607b80'});
+        }
+      }
+    }
+  }
+  // Keep through-roads clear; parked cars remain physical cover.
+  for(let i=OBSTACLES.length-1;i>=quarantineObstacleCount;i--){const o=OBSTACLES[i];if(o.type!=='car'&&ROADS.some(r=>o.x<r.x+r.w&&o.x+o.w>r.x&&o.y<r.y+r.h&&o.y+o.h>r.y))OBSTACLES.splice(i,1);}
+  // Shared spatial lookup for movement, sight and projectiles, independent of map size.
+  const obstacleCells=new Map(),CELL=360;
+  for(const o of OBSTACLES)for(let cy=Math.floor(o.y/CELL);cy<=Math.floor((o.y+o.h)/CELL);cy++)for(let cx=Math.floor(o.x/CELL);cx<=Math.floor((o.x+o.w)/CELL);cx++){
+    const key=cx+','+cy;if(!obstacleCells.has(key))obstacleCells.set(key,[]);obstacleCells.get(key).push(o);
+  }
+  function nearbyObstacles(x,y,w=0,h=0){const found=new Set();for(let cy=Math.floor(y/CELL);cy<=Math.floor((y+h)/CELL);cy++)for(let cx=Math.floor(x/CELL);cx<=Math.floor((x+w)/CELL);cx++)for(const o of obstacleCells.get(cx+','+cy)||[])found.add(o);return [...found];}
   const WEAPONS={
     pistol:{name:'Пистолет · 9 мм',price:0,damage:24,interval:.24,speed:1.2,mag:14,reload:1.1,pellets:1,spread:.022,range:920,ammo:'pistol',description:'Стартовое оружие. Бесконечный запас 9 мм; нужна только перезарядка.'},
     ak:{name:'АК-47 · 7,62 мм',price:240,damage:34,interval:.105,speed:1,mag:30,reload:1.65,pellets:1,spread:.03,range:1080,ammo:'rifle',description:'Автоматический огонь. Отдельные патроны 7,62 мм.'},
@@ -62,5 +120,5 @@
   MODES.normal.description='17 видов, 6 боссов. Адские мутанты и ночные некроманты.';
   MODES.hard.description='19 видов, все 8 боссов. Роботы, адские и усиленные ночные мутанты.';
 
-  const api={TURRETS,BARRICADE_TIERS,VERSION,COOP_SERVER,WORLD,OBSTACLES,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
+  const api={TURRETS,BARRICADE_TIERS,VERSION,COOP_SERVER,WORLD,OBSTACLES,DISTRICTS,ROADS,nearbyObstacles,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
 })(typeof window!=='undefined'?window:globalThis);

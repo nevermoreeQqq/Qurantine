@@ -88,7 +88,7 @@ test('Even with a matching digest, game packages cannot write outside the game f
 });
 test('A GitHub game installs, survives restart, repairs damaged runtime files, rolls back and updates without changing launcher files', async t => {
   const temp = fixture(t), archive = gamePackage(nextVersion), before = fs.readFileSync(path.join(root, 'desktop/main.cjs'));
-  const releaseSource = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: 6, notes: 'Collision fixes', remote: true }], news: [] }), download: async () => ({ buffer: archive.buffer, format: 2, digest: 'sha256:' + archive.sha256 }) };
+  const releaseSource = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: require('../content.js').VERSION, notes: 'Collision fixes', remote: true }], news: [] }), download: async () => ({ buffer: archive.buffer, format: 2, digest: 'sha256:' + archive.sha256 }) };
   const config = args(temp, releaseSource), updater = createUpdater(config);
   const state = await updater.refresh('http://old-peer-address:5173'); assert.equal(state.source, 'github'); assert.equal(state.latest, nextVersion);
   await updater.install(nextVersion);
@@ -101,7 +101,7 @@ test('A GitHub game installs, survives restart, repairs damaged runtime files, r
 });
 test('A corrupt GitHub download never changes the active version and untrusted local packages are not auto-imported', async t => {
   const temp = fixture(t), archive = gamePackage(nextVersion);
-  const source = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: 6 }], news: [] }), download: async () => ({ buffer: Buffer.from('bad'), format: 2, digest: archive.sha256 }) };
+  const source = { repository: REPOSITORY, catalog: async () => ({ versions: [{ version: nextVersion, protocol: require('../content.js').VERSION }], news: [] }), download: async () => ({ buffer: Buffer.from('bad'), format: 2, digest: archive.sha256 }) };
   const config = args(temp, source), updater = createUpdater(config);
   await assert.rejects(updater.install(nextVersion), /сумма/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(config.dataRoot, 'launcher.json'))).active, null);
