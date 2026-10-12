@@ -21,7 +21,7 @@
   }
   const SCHEMA=1,REVISION='quarantine-county-1';
   const clone=value=>JSON.parse(JSON.stringify(value));
-  const omitted=new Set(['random','flow','flowBlocked','flowQueue','blocked','flowCols','flowRows','events','players']);
+  const omitted=new Set(['random','flow','flowBlocked','flowQueue','blocked','flowCols','flowRows','flowTargetCell','events','players']);
   const unsafe=new Set(['__proto__','prototype','constructor']);
   function validJSON(value,depth=0){
     if(depth>24)return false;

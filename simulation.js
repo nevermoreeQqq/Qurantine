@@ -195,6 +195,9 @@
         for(const o of OBSTACLES)for(let y=Math.max(0,Math.floor((o.y-48)/60));y<=Math.min(rows-1,Math.floor((o.y+o.h+48)/60));y++)for(let x=Math.max(0,Math.floor((o.x-48)/60));x<=Math.min(cols-1,Math.floor((o.x+o.w+48)/60));x++)if(circleRect((x+.5)*60,(y+.5)*60,48,o))blocked[y*cols+x]=1;
         this.flowBlocked=blocked;
       }
+      const targetCell=clamp(Math.floor(target.y/60),0,rows-1)*cols+clamp(Math.floor(target.x/60),0,cols-1);
+      if(this.flowTargetCell===targetCell&&this.flow instanceof Int16Array&&this.flow.length===count&&this.blocked===this.flowBlocked)return;
+      this.flowTargetCell=targetCell;
       this.flow=this.flow?.length===count?this.flow:new Int16Array(count);this.flow.fill(32767);this.flowQueue=this.flowQueue?.length===count?this.flowQueue:new Int32Array(count);
       const blocked=this.flowBlocked,queue=this.flowQueue;let start=clamp(Math.floor(target.y/60),0,rows-1)*cols+clamp(Math.floor(target.x/60),0,cols-1);
       if(blocked[start]){let best=Infinity,nearest=start;for(let i=0;i<count;i++)if(!blocked[i]){const d=Math.abs(i%cols-start%cols)+Math.abs(Math.floor(i/cols)-Math.floor(start/cols));if(d<best){best=d;nearest=i;}}start=nearest;}

@@ -27,3 +27,23 @@ test('Terrain renders every district with bounded tile canvases',()=>{
   for(const d of DISTRICTS)terrain.draw(ctx,d.x,d.y,d.x+1400,d.y+900);
   assert.ok(terrain.cacheSize()<=24);assert.ok(canvases.every(c=>c.width<=768&&c.height<=768));assert.ok(canvases.filter(c=>c.width>0).length<=24);
 });
+
+test('Stationary targets reuse their navigation field; moving to another cell rebuilds it',()=>{
+  const g=new Simulation(()=>.5),p=g.addPlayer('solo');g.buildFlow(p);
+  const original=g.flow,values=Array.from(original),fill=original.fill;let fills=0;
+  original.fill=function(...args){fills++;return fill.apply(this,args);};
+  for(let i=0;i<30;i++)g.buildFlow(p);
+  assert.equal(fills,0);assert.deepEqual(Array.from(g.flow),values);
+  p.y+=120;g.buildFlow(p);assert.equal(fills,1);assert.equal(g.flow,original);
+  assert.ok(g.flow.some(value=>value===0));
+});
+test('Wide viewports keep visible terrain resident instead of regenerating it every frame',()=>{
+  const canvases=[];const ctx=new Proxy({createLinearGradient:()=>({addColorStop(){}}),createRadialGradient:()=>({addColorStop(){}})},{get:(obj,key)=>key in obj?obj[key]:()=>{}});
+  const root={window:{},GameContent:content,document:{createElement(){const canvas={width:0,height:0,getContext:()=>ctx};canvases.push(canvas);return canvas;}}};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../terrain.js'),'utf8'),root);
+  const terrain=root.window.QuarantineTerrain(WORLD,OBSTACLES);
+  terrain.draw(ctx,2700,2300,7700,5500);const allocated=canvases.length;
+  assert.ok(allocated<=24);
+  for(let frame=0;frame<20;frame++)terrain.draw(ctx,2700,2300,7700,5500);
+  assert.equal(canvases.length,allocated);assert.ok(terrain.cacheSize()<=24);
+});

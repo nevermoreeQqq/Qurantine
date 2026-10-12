@@ -63,7 +63,13 @@
   for(const o of OBSTACLES)for(let cy=Math.floor(o.y/CELL);cy<=Math.floor((o.y+o.h)/CELL);cy++)for(let cx=Math.floor(o.x/CELL);cx<=Math.floor((o.x+o.w)/CELL);cx++){
     const key=cx+','+cy;if(!obstacleCells.has(key))obstacleCells.set(key,[]);obstacleCells.get(key).push(o);
   }
-  function nearbyObstacles(x,y,w=0,h=0){const found=new Set();for(let cy=Math.floor(y/CELL);cy<=Math.floor((y+h)/CELL);cy++)for(let cx=Math.floor(x/CELL);cx<=Math.floor((x+w)/CELL);cx++)for(const o of obstacleCells.get(cx+','+cy)||[])found.add(o);return [...found];}
+  const obstacleQueries=new Map();
+  function nearbyObstacles(x,y,w=0,h=0){
+    const minX=Math.floor(x/CELL),minY=Math.floor(y/CELL),maxX=Math.floor((x+w)/CELL),maxY=Math.floor((y+h)/CELL),key=minX+','+minY+','+maxX+','+maxY;
+    if(obstacleQueries.has(key))return obstacleQueries.get(key);
+    const found=new Set();for(let cy=minY;cy<=maxY;cy++)for(let cx=minX;cx<=maxX;cx++)for(const o of obstacleCells.get(cx+','+cy)||[])found.add(o);
+    const result=[...found];obstacleQueries.set(key,result);if(obstacleQueries.size>512)obstacleQueries.delete(obstacleQueries.keys().next().value);return result;
+  }
   const WEAPONS={
     pistol:{name:'Пистолет · 9 мм',price:0,damage:24,interval:.24,speed:1.2,mag:14,reload:1.1,pellets:1,spread:.022,range:920,ammo:'pistol',description:'Стартовое оружие. Бесконечный запас 9 мм; нужна только перезарядка.'},
     ak:{name:'АК-47 · 7,62 мм',price:240,damage:34,interval:.105,speed:1,mag:30,reload:1.65,pellets:1,spread:.03,range:1080,ammo:'rifle',description:'Автоматический огонь. Отдельные патроны 7,62 мм.'},

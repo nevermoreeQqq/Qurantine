@@ -1,25 +1,29 @@
 window.QuarantineTerrain = function(WORLD, obstacles) {
   const {ROADS,DISTRICTS,nearbyObstacles}=GameContent;
-  const SIZE=768,LIMIT=24,tiles=new Map();
+  const SIZE=768,LIMIT=24,tiles=new Map();let scale=1;
   const overlaps=(a,b)=>a.x<=b.x+b.w&&a.x+a.w>=b.x&&a.y<=b.y+b.h&&a.y+a.h>=b.y;
   function tile(tx,ty){
-    const key=tx+','+ty;if(tiles.has(key)){const value=tiles.get(key);tiles.delete(key);tiles.set(key,value);return value;}
+    const key=scale+':'+tx+','+ty;if(tiles.has(key)){const value=tiles.get(key);tiles.delete(key);tiles.set(key,value);return value;}
     const canvas=document.createElement('canvas');canvas.width=SIZE;canvas.height=SIZE;const c=canvas.getContext('2d');
-    const x=tx*SIZE,y=ty*SIZE,box={x,y,w:SIZE,h:SIZE};c.translate(-x,-y);
-    c.fillStyle='#293b2c';c.fillRect(x,y,SIZE,SIZE);
+    const span=SIZE*scale,x=tx*span,y=ty*span,box={x,y,w:span,h:span};c.scale(1/scale,1/scale);c.translate(-x,-y);
+    c.fillStyle='#293b2c';c.fillRect(x,y,span,span);
     for(const d of DISTRICTS)if(overlaps(box,d)){c.fillStyle=({industrial:'#303a38',town:'#35403b',residential:'#394432',farm:'#4b5132',forest:'#213927'})[d.kind];c.fillRect(d.x,d.y,d.w,d.h);if(d.kind==='farm'){c.strokeStyle='#71644055';c.lineWidth=7;for(let row=d.y+900;row<d.y+d.h;row+=38){c.beginPath();c.moveTo(d.x+80,row);c.lineTo(d.x+d.w-80,row);c.stroke();}}}
     let seed=(tx*73856093^ty*19349663^731)>>>0;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-    for(let i=0;i<520;i++){c.fillStyle=i%2?'#09180d20':'#a4af7914';c.fillRect(x+random()*SIZE,y+random()*SIZE,1+random()*4,1+random()*4);}
+    for(let i=0;i<520;i++){c.fillStyle=i%2?'#09180d20':'#a4af7914';c.fillRect(x+random()*span,y+random()*span,1+random()*4,1+random()*4);}
     for(const road of ROADS)if(overlaps(box,road)){
       c.fillStyle='#565b50';c.fillRect(road.x-12,road.y-12,road.w+24,road.h+24);c.fillStyle='#272e2e';c.fillRect(road.x,road.y,road.w,road.h);
       c.strokeStyle='#b5ac735e';c.lineWidth=2;c.setLineDash([22,30]);c.beginPath();
-      if(road.w>road.h){c.moveTo(Math.max(x,road.x),road.y+road.h/2);c.lineTo(Math.min(x+SIZE,road.x+road.w),road.y+road.h/2);}else{c.moveTo(road.x+road.w/2,Math.max(y,road.y));c.lineTo(road.x+road.w/2,Math.min(y+SIZE,road.y+road.h));}c.stroke();c.setLineDash([]);
+      if(road.w>road.h){c.moveTo(Math.max(x,road.x),road.y+road.h/2);c.lineTo(Math.min(x+span,road.x+road.w),road.y+road.h/2);}else{c.moveTo(road.x+road.w/2,Math.max(y,road.y));c.lineTo(road.x+road.w/2,Math.min(y+span,road.y+road.h));}c.stroke();c.setLineDash([]);
     }
-    for(const o of nearbyObstacles(x-80,y-80,SIZE+160,SIZE+160))drawObstacle(c,o);
+    for(const o of nearbyObstacles(x-80,y-80,span+160,span+160))drawObstacle(c,o);
     c.strokeStyle='#7a877859';c.lineWidth=4;c.strokeRect(20,20,WORLD.w-40,WORLD.h-40);
     tiles.set(key,canvas);while(tiles.size>LIMIT){const first=tiles.keys().next().value;const discarded=tiles.get(first);discarded.width=discarded.height=0;tiles.delete(first);}return canvas;
   }
-  function draw(c,left,top,right,bottom){for(let ty=Math.max(0,Math.floor(top/SIZE));ty<=Math.min(Math.ceil(WORLD.h/SIZE)-1,Math.floor(bottom/SIZE));ty++)for(let tx=Math.max(0,Math.floor(left/SIZE));tx<=Math.min(Math.ceil(WORLD.w/SIZE)-1,Math.floor(right/SIZE));tx++)c.drawImage(tile(tx,ty),tx*SIZE,ty*SIZE);}
+  function draw(c,left,top,right,bottom){
+    const countAt=s=>(Math.ceil((right-left)/(SIZE*s))+1)*(Math.ceil((bottom-top)/(SIZE*s))+1);
+    scale=1;while(countAt(scale)>LIMIT)scale*=2;
+    const span=SIZE*scale;for(let ty=Math.max(0,Math.floor(top/span));ty<=Math.min(Math.ceil(WORLD.h/span)-1,Math.floor(bottom/span));ty++)for(let tx=Math.max(0,Math.floor(left/span));tx<=Math.min(Math.ceil(WORLD.w/span)-1,Math.floor(right/span));tx++)c.drawImage(tile(tx,ty),tx*span,ty*span,span,span);
+  }
   function drawObstacle(c,o) {
     const {x,y,w,h,type}=o;c.fillStyle='#090e0b70';c.fillRect(x+11,y+13,w+3,h+3);
     if(type==='tree'){circle(c,x+w/2+8,y+h/2+8,45,'#101e1670');for(const [dx,dy,r]of[[0,0,42],[-22,7,29],[18,-18,32]]){circle(c,x+w/2+dx,y+h/2+dy,r,'#243e2a');circle(c,x+w/2+dx-6,y+h/2+dy-5,r*.7,'#345039');}return;}if(type==='car'){
