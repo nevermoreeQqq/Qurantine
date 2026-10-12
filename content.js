@@ -1,8 +1,8 @@
 (function(root){
   'use strict';
-  const VERSION=7;
+  const VERSION=8;
   const COOP_SERVER='http://195.19.213.215';
-  const WORLD={w:12000,h:8640,id:'cordon-county-1'};
+  const WORLD={w:12000,h:8640,id:'cordon-county-2'};
   const OBSTACLES=[{x:310,y:250,w:310,h:180,type:'building'},{x:1460,y:220,w:370,h:200,type:'building'},{x:300,y:1130,w:310,h:290,type:'building'},{x:1690,y:1190,w:340,h:230,type:'building'},{x:830,y:520,w:156,h:84,type:'container'},{x:1450,y:740,w:92,h:210,type:'container'},{x:720,y:930,w:180,h:76,type:'container'},{x:1270,y:1210,w:230,h:84,type:'container'},{x:1820,y:590,w:110,h:110,type:'crates'},{x:1030,y:280,w:110,h:95,type:'crates'},{x:1000,y:1045,w:75,h:75,type:'crates'},{x:1310,y:530,w:85,h:85,type:'crates'},{x:460,y:690,w:120,h:66,type:'barricade'},{x:1960,y:920,w:120,h:66,type:'barricade'},{x:830,y:1430,w:150,h:66,type:'barricade'},
     {x:2330,y:250,w:370,h:260,type:'building'},{x:2420,y:1590,w:330,h:220,type:'building'},{x:460,y:1790,w:290,h:200,type:'building'},{x:1980,y:1810,w:160,h:86,type:'container'},{x:2600,y:1130,w:150,h:86,type:'container'},
     {x:640,y:845,w:116,h:53,type:'car',paint:'#3c6770'},{x:2030,y:843,w:120,h:55,type:'car',paint:'#774d41'},{x:2640,y:929,w:120,h:54,type:'car',paint:'#66754e'},{x:1140,y:1640,w:56,h:119,type:'car',paint:'#c1aa76'},{x:2770,y:1290,w:115,h:60,type:'car',paint:'#627a82'}];
@@ -21,43 +21,53 @@
     {name:'ЛЕСНОЙ ПОСЁЛОК',x:6380,y:6180,w:2360,h:2160,kind:'residential'},
     {name:'ДАЛЬНИЙ ЛЕС',x:9300,y:6140,w:2400,h:2220,kind:'forest'}
   ];
-  const ROADS=[{x:30,y:820,w:WORLD.w-60,h:180},{x:1120,y:30,w:175,h:WORLD.h-60},
-    ...[3000,6000,9000].map(x=>({x,y:30,w:180,h:WORLD.h-60})),
-    ...[2860,5700].map(y=>({x:30,y,w:WORLD.w-60,h:180}))];
-  for(const d of DISTRICTS.slice(1)){
-    if(d.kind==='forest'){
-      for(let y=d.y+100;y<d.y+d.h-70;y+=190)for(let x=d.x+100;x<d.x+d.w-70;x+=190){
-        const n=(Math.imul(x,73856093)^Math.imul(y,19349663))>>>0;if(n%5===0)continue;
-        OBSTACLES.push({x:x+(n%61)-30,y:y+(n%47)-23,w:38,h:38,type:'tree'});
-      }continue;
+  // Reproducible generation keeps server and clients on the same county layout.
+  function generateCounty(seed=731){
+    let state=seed>>>0;const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
+    const between=(a,b)=>Math.round(a+random()*(b-a)),choose=a=>a[Math.floor(random()*a.length)];
+    const roads=[{x:30,y:820,w:2940,h:180},{x:1120,y:30,w:175,h:2130},
+      {x:2890,y:851,w:7940,h:118,major:true},{x:1148,y:2160,w:118,h:3940,major:true},
+      {x:3980,y:180,w:118,h:7780,major:true},{x:7360,y:180,w:118,h:7890,major:true},
+      {x:10580,y:180,w:118,h:7700,major:true},{x:1148,y:3300,w:9550,h:118,major:true},
+      {x:1148,y:5970,w:9550,h:118,major:true}];
+    const objects=OBSTACLES.slice(0,quarantineObstacleCount);
+    const overlap=(a,b,gap=0)=>a.x<b.x+b.w+gap&&a.x+a.w>b.x-gap&&a.y<b.y+b.h+gap&&a.y+a.h>b.y-gap;
+    const plans=[];
+    for(const d of DISTRICTS.slice(1)){
+      if(d.kind==='forest')continue;
+      const streets=[];let y=d.y+between(270,420);
+      while(y<d.y+d.h-240){const r={x:d.x+between(80,170),y,w:d.w-between(210,360),h:d.kind==='farm'?54:68,local:true};roads.push(r);streets.push(r);y+=between(d.kind==='farm'?700:410,d.kind==='farm'?1050:650);}
+      if(d.kind!=='farm'&&streets.length>1){
+        // Cross streets link the frontage roads, but do not repeat a four-way grid.
+        const x=d.x+between(300,480),first=streets[0],last=streets.at(-1);
+        roads.push({x,y:first.y,w:68,h:last.y+last.h-first.y,local:true});
+        if(d.kind==='town')roads.push({x:d.x+d.w-between(370,540),y:first.y,w:68,h:streets[Math.max(1,streets.length-2)].y-first.y+68,local:true});
+      }
+      plans.push({d,streets});
     }
-    if(d.kind==='farm'){
-      for(let x=d.x+140;x<d.x+d.w-300;x+=900){OBSTACLES.push({x,y:d.y+260,w:300,h:190,type:'building',label:'АМБАР',roof:'#655343'});OBSTACLES.push({x:x+360,y:d.y+280,w:150,h:120,type:'building',label:'ДОМ',roof:'#685e50'});}
-      ROADS.push({x:d.x,y:d.y+650,w:d.w,h:100});continue;
-    }
-    const block=620;
-    for(let y=d.y+140;y<d.y+d.h-300;y+=block){
-      ROADS.push({x:d.x,y:y-100,w:d.w,h:90});
-      for(let x=d.x+140;x<d.x+d.w-300;x+=block){
-        if(y===d.y+140)ROADS.push({x:x-100,y:d.y,w:90,h:d.h});
-        if(d.kind==='industrial'){
-          OBSTACLES.push({x,y,w:340,h:230,type:'building',label:'СКЛАД',roof:'#435459'});
-          OBSTACLES.push({x:x+40,y:y+310,w:200,h:76,type:'container'});
-          OBSTACLES.push({x:x+370,y:y+200,w:110,h:54,type:'car',paint:'#676b59'});
-        }else if(d.kind==='town'){
-          OBSTACLES.push({x,y,w:360,h:220,type:'building',label:d.name.startsWith('МЕД')?'КЛИНИКА':'МАГАЗИН',roof:'#556068'});
-          OBSTACLES.push({x,y:y+300,w:210,h:120,type:'building',label:'ОФИС',roof:'#5e5e54'});
-          OBSTACLES.push({x:x+310,y:y+315,w:116,h:53,type:'car',paint:'#787260'});
-        }else{
-          for(const [dx,dy,roof]of[[0,0,'#705e50'],[280,0,'#626951'],[0,290,'#5b6570'],[280,290,'#755e56']])
-            OBSTACLES.push({x:x+dx,y:y+dy,w:170,h:130,type:'building',label:'ДОМ',roof});
-          OBSTACLES.push({x:x+190,y:y+160,w:110,h:52,type:'car',paint:'#607b80'});
+    function place(o){if(o.x<50||o.y<50||o.x+o.w>WORLD.w-50||o.y+o.h>WORLD.h-50||roads.some(r=>overlap(o,r,18))||objects.some(other=>overlap(o,other,22)))return false;objects.push(o);return true;}
+    for(const {d,streets}of plans)for(const street of streets){
+      for(const side of [-1,1])for(let x=street.x+50;x<street.x+street.w-180;){
+        const industrial=d.kind==='industrial',farm=d.kind==='farm',town=d.kind==='town';
+        const w=between(industrial?230:farm?180:town?170:110,industrial?460:farm?350:town?340:195),h=between(industrial?140:farm?130:90,industrial?240:farm?210:town?190:150);
+        const inset=between(40,90),y=side<0?street.y-inset-h:street.y+street.h+inset;
+        const labels=industrial?['СКЛАД','ЦЕХ','ДЕПО']:farm?['АМБАР','ФЕРМА','ДОМ']:town?['МАГАЗИН','ОФИС','АПТЕКА','КАФЕ']:['ДОМ'];
+        if(random()>.18){const o={x:x+between(-10,20),y,w,h,type:'building',label:choose(labels),roof:choose(industrial?['#45565a','#51564e','#62605a']:['#77604e','#606f65','#6a6775','#6f534d','#88806a']),roofStyle:between(0,3),front:side};
+          if(place(o)&&random()<.45)place({x:o.x+w+28,y:o.y+between(0,40),w:between(94,122),h:between(45,57),type:'car',paint:choose(['#617d78','#806655','#888575','#465966'])});
+          if(industrial&&random()<.55)place({x:o.x,y:side<0?o.y-112:o.y+h+30,w:between(130,210),h:76,type:'container'});
         }
+        x+=w+between(farm?200:65,farm?460:155);
       }
     }
+    for(const d of DISTRICTS.filter(d=>d.kind==='forest')){
+      for(let i=0;i<320;i++){const o={x:between(d.x+70,d.x+d.w-70),y:between(d.y+70,d.y+d.h-70),w:30,h:30,type:'tree',canopy:between(30,49),tint:choose(['#314937','#3c5140','#29432e'])};place(o);}
+    }
+    // Scattered trees soften the edges of suburbs and leave open greens between lots.
+    for(const d of DISTRICTS.filter(d=>d.kind==='residential'))for(let i=0;i<40;i++)place({x:between(d.x+60,d.x+d.w-60),y:between(d.y+60,d.y+d.h-60),w:26,h:26,type:'tree',canopy:between(25,37),tint:'#3d5440'});
+    return {seed,roads,obstacles:objects};
   }
-  // Keep through-roads clear; parked cars remain physical cover.
-  for(let i=OBSTACLES.length-1;i>=quarantineObstacleCount;i--){const o=OBSTACLES[i];if(o.type!=='car'&&ROADS.some(r=>o.x<r.x+r.w&&o.x+o.w>r.x&&o.y<r.y+r.h&&o.y+o.h>r.y))OBSTACLES.splice(i,1);}
+  const county=generateCounty(),ROADS=county.roads;
+  OBSTACLES.splice(0,OBSTACLES.length,...county.obstacles);
   // Shared spatial lookup for movement, sight and projectiles, independent of map size.
   const obstacleCells=new Map(),CELL=360;
   for(const o of OBSTACLES)for(let cy=Math.floor(o.y/CELL);cy<=Math.floor((o.y+o.h)/CELL);cy++)for(let cx=Math.floor(o.x/CELL);cx<=Math.floor((o.x+o.w)/CELL);cx++){
@@ -126,5 +136,5 @@
   MODES.normal.description='17 видов, 6 боссов. Адские мутанты и ночные некроманты.';
   MODES.hard.description='19 видов, все 8 боссов. Роботы, адские и усиленные ночные мутанты.';
 
-  const api={TURRETS,BARRICADE_TIERS,VERSION,COOP_SERVER,WORLD,OBSTACLES,DISTRICTS,ROADS,nearbyObstacles,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
+  const api={TURRETS,BARRICADE_TIERS,VERSION,COOP_SERVER,WORLD,OBSTACLES,DISTRICTS,ROADS,generateCounty,nearbyObstacles,WEAPONS,AMMO,GRENADES,GOODS,STATS,BOSSES,MODES,BUILD_ITEMS};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GameContent=api;
 })(typeof window!=='undefined'?window:globalThis);

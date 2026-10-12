@@ -16,7 +16,7 @@ test('Spatial queries preserve collision and sight throughout the county',()=>{
 });
 test('Far districts have valid paths and encounters around the active player',()=>{
   const g=new Simulation();const p=g.addPlayer('solo');
-  for(const position of [{x:3090,y:2950},{x:6090,y:5790},{x:9090,y:5790}]){Object.assign(p,position);assert.ok(g.valid(p.x,p.y,p.r));g.buildFlow(p);assert.ok(g.flow.some(d=>d===0));for(let i=0;i<30;i++){const e=g.spawn('walker');assert.ok(g.staticValid(e.x,e.y,e.r));const distance=Math.hypot(e.x-p.x,e.y-p.y);assert.ok(distance>=1000&&distance<=1650);g.enemies=[];}}
+  for(const position of [{x:4039,y:3359},{x:7419,y:6029},{x:10639,y:6029}]){Object.assign(p,position);assert.ok(g.valid(p.x,p.y,p.r));g.buildFlow(p);assert.ok(g.flow.some(d=>d===0));for(let i=0;i<30;i++){const e=g.spawn('walker');assert.ok(g.staticValid(e.x,e.y,e.r));const distance=Math.hypot(e.x-p.x,e.y-p.y);assert.ok(distance>=1000&&distance<=1650);g.enemies=[];}}
   for(let i=0;i<g.flowBlocked.length;i+=53){const x=(i%g.flowCols+.5)*60,y=(Math.floor(i/g.flowCols)+.5)*60;assert.equal(Boolean(g.flowBlocked[i]),!g.staticValid(x,y,48));}
 });
 test('Terrain renders every district with bounded tile canvases',()=>{
@@ -46,4 +46,13 @@ test('Wide viewports keep visible terrain resident instead of regenerating it ev
   assert.ok(allocated<=24);
   for(let frame=0;frame<20;frame++)terrain.draw(ctx,2700,2300,7700,5500);
   assert.equal(canvases.length,allocated);assert.ok(terrain.cacheSize()<=24);
+});
+
+test('County generation is reproducible, seed-dependent and connects every road',()=>{
+  const {generateCounty}=content,a=generateCounty(731),b=generateCounty(731),other=generateCounty(119);
+  assert.deepEqual(a,b);assert.notDeepEqual(a.obstacles,other.obstacles);
+  const connected=new Set([0]),queue=[0],touch=(r,s)=>r.x<=s.x+s.w&&r.x+r.w>=s.x&&r.y<=s.y+s.h&&r.y+r.h>=s.y;
+  for(let head=0;head<queue.length;head++)for(let i=0;i<a.roads.length;i++)if(!connected.has(i)&&touch(a.roads[queue[head]],a.roads[i])){connected.add(i);queue.push(i);}
+  assert.equal(connected.size,a.roads.length,'no disconnected street stubs');
+  const shapes=new Set(a.obstacles.filter(o=>o.label==='ДОМ').map(o=>o.w+':'+o.h));assert.ok(shapes.size>20);
 });

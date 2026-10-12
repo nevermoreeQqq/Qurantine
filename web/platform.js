@@ -19,7 +19,7 @@
       if(next!==this.active){this.sdk.features.GameplayAPI[next?'start':'stop']();this.active=next;}
     }
   }
-  const SCHEMA=1,REVISION='quarantine-county-1';
+  const SCHEMA=1,REVISION='quarantine-county-2';
   const clone=value=>JSON.parse(JSON.stringify(value));
   const omitted=new Set(['random','flow','flowBlocked','flowQueue','blocked','flowCols','flowRows','flowTargetCell','events','players']);
   const unsafe=new Set(['__proto__','prototype','constructor']);
