@@ -11,3 +11,12 @@ test('All enemy species and boss abilities render three variants and reuse cache
   for(let frame=0;frame<15;frame++)for(const e of enemies)art.enemy(ctx,{...e,id:e.id+300,hit:.1,frozen:.1},frame/60);
   assert.equal(canvases.length,allocated);
 });
+
+test('Eight bosses have different geometry, independently of their colors',()=>{
+  const textures=[];const gradient=()=>({addColorStop(){}});
+  const makeContext=commands=>new Proxy({createLinearGradient:gradient,createRadialGradient:gradient},{get:(o,k)=>k in o?o[k]:(...args)=>{if(['moveTo','lineTo','ellipse','arc','fillRect'].includes(k))commands.push([k,...args]);}});
+  const root={window:{},GameContent:content,document:{createElement(){const commands=[],canvas={width:0,height:0,getContext:()=>makeContext(commands)};textures.push(commands);return canvas;}}};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../render.js'),'utf8'),root);const art=root.window.QuarantineArt(),ctx=makeContext([]);
+  for(const boss of content.BOSSES)art.enemy(ctx,{...content.STATS.boss,...boss,color:'#89977b',type:'boss',id:0,x:100,y:100,angle:0,hp:1450,maxHp:1450},0);
+  assert.equal(textures.length,8);assert.equal(new Set(textures.map(v=>JSON.stringify(v))).size,8);
+});
