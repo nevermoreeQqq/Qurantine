@@ -84,3 +84,10 @@ test('Co-op prediction and unacknowledged input replay respect the same enemy co
   }
   predictor.reconcile({...p,ack:10},[],[e]);separated(predictor.player,e);assert.equal(predictor.pending.length,30);
 });
+test('A zombie near a building wall and corner navigates around it to reach the player without getting stuck',()=>{
+  const {game,p}=arena();p.hp=10000;p.x=200;p.y=200;
+  // Place zombie near building at (310, 250, 310, 180)
+  const e=enemy(game,'walker',290,440);e.special=100;
+  for(let i=0;i<300;i++){game.tick(STEP);}
+  assert.ok(Math.hypot(e.x-p.x,e.y-p.y)<150,'zombie navigates around building toward player');
+});

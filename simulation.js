@@ -189,9 +189,44 @@
         for(const p of this.players)if(p.hp>0&&dist(g,p)<240&&this.sight(g,p)){this.hurtPlayer(p,blastDamage(dist(g,p),240,55));p.controlLock=Math.max(p.controlLock,.55);}let from=g,damage=180;const visited=new Set();for(let i=0;i<8;i++){const e=this.enemies.filter(e=>e.hp>0&&!visited.has(e.id)&&dist(from,e)<(i?215:240)&&this.sight(from,e)).sort((a,b)=>dist(from,a)-dist(from,b))[0];if(!e)break;visited.add(e.id);this.event('arc',{x:from.x,y:from.y,tx:e.x,ty:e.y,kind:'shock'});this.hurtEnemy(e,damage,g.owner,0,'shock');e.frozen=Math.max(e.frozen,.55);from=e;damage*=.9;}return;
       }if(g.type==='molotov'){this.fires.push({id:this.id(),x:g.x,y:g.y,r:105,life:6,tick:0,owner:g.owner,type:'molotov'});return;}if(g.type!=='enemy')for(const prop of [...this.totems,...this.cocoons,...this.mines])if(dist(g,prop)<230&&this.sight(g,prop))this.hurtProp(prop,blastDamage(dist(g,prop),230,320),g.owner);if(g.type!=='enemy')for(const e of this.enemies)if(e.hp>0&&dist(g,e)<230&&this.sight(g,e))this.hurtEnemy(e,blastDamage(dist(g,e),230,320),g.owner,Math.atan2(e.y-g.y,e.x-g.x));for(const p of this.players)if(p.hp>0&&dist(g,p)<145&&this.sight(g,p))this.hurtPlayer(p,blastDamage(dist(g,p),145,g.type==='enemy'?38:90));for(const b of this.barriers)if(circleRect(g.x,g.y,150,b))b.hp-=g.type==='enemy'?55:80;}
     buildFlow(target){const cols=Math.ceil(WORLD.w/60),rows=Math.ceil(WORLD.h/60),blocked=this.flowBlocked||(this.flowBlocked=Array.from({length:cols*rows},(_,i)=>!this.staticValid((i%cols+.5)*60,(Math.floor(i/cols)+.5)*60,48)));this.flow=new Int16Array(cols*rows);this.flow.fill(32767);let start=clamp(Math.floor(target.y/60),0,rows-1)*cols+clamp(Math.floor(target.x/60),0,cols-1);if(blocked[start]){let best=Infinity,nearest=start;for(let i=0;i<cols*rows;i++)if(!blocked[i]){const d=Math.hypot(i%cols-start%cols,Math.floor(i/cols)-Math.floor(start/cols));if(d<best){best=d;nearest=i;}}start=nearest;}const queue=[start];this.flow[start]=0;for(let h=0;h<queue.length;h++){const i=queue[h],x=i%cols,y=Math.floor(i/cols);for(const [dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,j=ny*cols+nx;if(nx>=0&&ny>=0&&nx<cols&&ny<rows&&!blocked[j]&&this.flow[j]===32767){this.flow[j]=this.flow[i]+1;queue.push(j);}}}this.blocked=blocked;this.flowCols=cols;this.flowRows=rows;}
-    enemyTarget(e,p){if(this.sight(e,p,e.r))return p;const x=Math.floor(e.x/60),y=Math.floor(e.y/60);let target=p,best=Infinity;for(const [dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,i=ny*this.flowCols+nx;if(nx<0||ny<0||nx>=this.flowCols||ny>=this.flowRows||this.blocked[i])continue;const t={x:(nx+.5)*60,y:(ny+.5)*60},score=this.flow[i]*60+dist(e,t)*.2;if(score<best&&this.sight(e,t,e.r)){best=score;target=t;}}return target;}
+    enemyTarget(e,p){
+      if(this.sight(e,p,e.r))return p;
+      const x=Math.floor(e.x/60),y=Math.floor(e.y/60);
+      let target=null,best=Infinity;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=this.flowCols||ny>=this.flowRows)continue;
+        const i=ny*this.flowCols+nx;if(this.blocked[i]||this.flow[i]>=30000)continue;
+        const t={x:(nx+.5)*60,y:(ny+.5)*60},score=this.flow[i]*60+dist(e,t)*.2;
+        if(score<best&&this.sight(e,t,0)){best=score;target=t;}
+      }
+      if(!target)for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+        if(Math.abs(dx)<=1&&Math.abs(dy)<=1)continue;
+        const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=this.flowCols||ny>=this.flowRows)continue;
+        const i=ny*this.flowCols+nx;if(this.blocked[i]||this.flow[i]>=30000)continue;
+        const t={x:(nx+.5)*60,y:(ny+.5)*60},score=this.flow[i]*60+dist(e,t)*.2;
+        if(score<best&&this.sight(e,t,0)){best=score;target=t;}
+      }
+      if(!target)for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+        const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=this.flowCols||ny>=this.flowRows)continue;
+        const i=ny*this.flowCols+nx;if(this.blocked[i]||this.flow[i]>=30000)continue;
+        const t={x:(nx+.5)*60,y:(ny+.5)*60},score=this.flow[i]*60+dist(e,t)*2;
+        if(score<best){best=score;target=t;}
+      }
+      return target||p;
+    }
     tickEnemy(e,alive,dt){
-      if(e.hp<=0)return;e.hit=Math.max(0,e.hit-dt);e.swing=Math.max(0,e.swing-dt);e.frozen=Math.max(0,e.frozen-dt);e.rage=Math.max(0,e.rage-dt);e.burn=Math.max(0,e.burn-dt);e.burnTick-=dt;
+      if(e.hp<=0)return;
+      if(!this.valid(e.x,e.y,e.r,'enemy')){
+        for(let ring=1;ring<=8;ring++){
+          let found=false;
+          for(let a=0;a<8;a++){
+            const angle=a*Math.PI/4,nx=e.x+Math.cos(angle)*ring*5,ny=e.y+Math.sin(angle)*ring*5;
+            if(this.valid(nx,ny,e.r,'enemy')){e.x=nx;e.y=ny;found=true;break;}
+          }
+          if(found)break;
+        }
+      }
+      e.hit=Math.max(0,e.hit-dt);e.swing=Math.max(0,e.swing-dt);e.frozen=Math.max(0,e.frozen-dt);e.rage=Math.max(0,e.rage-dt);e.burn=Math.max(0,e.burn-dt);e.burnTick-=dt;
       if(e.burn>0&&e.burnTick<=0){this.hurtEnemy(e,5,e.burnOwner,0,'flame');e.burnTick=.25;}if(e.hp<=0||e.frozen>0)return;
       e.attack-=dt;e.special-=dt;e.step+=dt*e.speed*.06;
       let target=alive.reduce((a,b)=>dist(e,a)<dist(e,b)?a:b);const lure=this.barriers.filter(b=>TURRETS[b.type]&&b.hp>0&&dist(e,{x:b.x+b.w/2,y:b.y+b.h/2})<620).sort((a,b)=>dist(e,{x:a.x+a.w/2,y:a.y+a.h/2})-dist(e,{x:b.x+b.w/2,y:b.y+b.h/2}))[0];if(lure&&e.type!=='boss')target={x:lure.x+lure.w/2,y:lure.y+lure.h/2,r:26,structure:lure};const d=dist(e,target);e.angle=Math.atan2(target.y-e.y,target.x-e.x);
